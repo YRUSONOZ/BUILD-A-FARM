@@ -302,6 +302,10 @@
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
-    <script type="module" src="script.js"></script>
+    <script type="module">
+        import('./script.js')
+            .then(() => console.log("script.js loaded successfully"))
+            .catch(error => console.error("Error loading script.js:", error));
+    </script>
 </body>
 </html>
