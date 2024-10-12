@@ -19,6 +19,115 @@ class CropFarmingGame {
         this.marketPrices = {};
         this.contractAddress = '0xf19b95A8b666E1fe91448f7e4184df14D36BA05C';
         this.contractABI = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "yieldBoostMultiplier",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "harvestCrops",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_index",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "yieldBoostMultiplier",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "harvestSingleCrop",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "_cropType",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "growthSpeedMultiplier",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "plantCrop",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getCurrentWeather",
+                "outputs": [
+                    {
+                        "internalType": "enum CryptoFarming.Weather",
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_farmer",
+                        "type": "address"
+                    }
+                ],
+                "name": "getFarmStatus",
+                "outputs": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "string",
+                                "name": "cropType",
+                                "type": "string"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "plantTime",
+                                "type": "uint256"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "maturityTime",
+                                "type": "uint256"
+                            }
+                        ],
+                        "internalType": "struct CryptoFarming.Crop[]",
+                        "name": "",
+                        "type": "tuple[]"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
             // Your contract ABI here
         ];
         this.marketUpdateInterval = 30000;
