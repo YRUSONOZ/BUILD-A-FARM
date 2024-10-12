@@ -18,7 +18,8 @@ class CropFarmingGame {
         ];
         this.marketPrices = {};
         this.contractAddress = '0xf19b95A8b666E1fe91448f7e4184df14D36BA05C';
-        this.contractABI = [[
+        this.contractABI = [
+            [
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -281,7 +282,6 @@ class CropFarmingGame {
 		"type": "function"
 	}
 ]
-            // Replace this with your actual contract ABI
             {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
             {"inputs":[{"internalType":"string","name":"_cropType","type":"string"},{"internalType":"uint256","name":"growthSpeedMultiplier","type":"uint256"}],"name":"plantCrop","outputs":[],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"uint256","name":"yieldBoostMultiplier","type":"uint256"}],"name":"harvestCrops","outputs":[],"stateMutability":"nonpayable","type":"function"},
