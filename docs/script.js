@@ -2,6 +2,7 @@ import UpgradeSystem from './upgrades.js';
 
 class CropFarmingGame {
     constructor() {
+        console.log("Initializing CropFarmingGame");
         this.playerID = 'Not Connected';
         this.balance = 0;
         this.crops = [];
@@ -16,7 +17,7 @@ class CropFarmingGame {
             { name: "Dogecoin", baseGrowthTime: 60, baseReward: 10, basePlantCost: 1 }
         ];
         this.marketPrices = {};
-        this.contractAddress = '0xf19b95a8b666e1fe91448f7e4184df14d36ba05c';
+        this.contractAddress = '0xf19b95A8b666E1fe91448f7e4184df14D36BA05C';
         this.contractABI = [[
 	{
 		"inputs": [],
@@ -301,9 +302,11 @@ class CropFarmingGame {
         this.initializeMarketPrices();
         this.initializeUI();
         this.startMarketFluctuations();
+        console.log("CropFarmingGame initialized");
     }
 
     initializeUI() {
+        console.log("Initializing UI");
         const connectWalletBtn = document.getElementById('connect-wallet-btn');
         if (connectWalletBtn) {
             connectWalletBtn.addEventListener('click', () => this.connectWallet());
@@ -316,18 +319,22 @@ class CropFarmingGame {
         this.updateCropTypes();
         this.updateMarketUI();
         this.updateWeatherUI();
+        console.log("UI initialized");
     }
 
     initializeMarketPrices() {
+        console.log("Initializing market prices");
         this.cropTypes.forEach(crop => {
             this.marketPrices[crop.name] = {
                 currentPrice: crop.baseReward,
                 trend: Math.random() > 0.5 ? 'up' : 'down'
             };
         });
+        console.log("Market prices initialized:", this.marketPrices);
     }
 
     startMarketFluctuations() {
+        console.log("Starting market fluctuations");
         this.updateMarketPrices();
         this.updateMarketCountdown();
 
@@ -351,10 +358,13 @@ class CropFarmingGame {
         const countdownElement = document.getElementById('market-countdown');
         if (countdownElement) {
             countdownElement.textContent = `Next update in: ${this.marketCountdown}s`;
+        } else {
+            console.error("Market countdown element not found");
         }
     }
 
     updateMarketPrices() {
+        console.log("Updating market prices");
         this.cropTypes.forEach(crop => {
             const market = this.marketPrices[crop.name];
             const changePercent = Math.random() * 0.2;
@@ -376,6 +386,7 @@ class CropFarmingGame {
     }
 
     updateMarketUI() {
+        console.log("Updating market UI");
         const marketContainer = document.getElementById('market-prices-scroll');
         if (!marketContainer) {
             console.error("Market prices container not found");
@@ -391,6 +402,7 @@ class CropFarmingGame {
     }
 
     updateCropTypes() {
+        console.log("Updating crop types");
         const cropSelect = document.getElementById('crop-select');
         if (!cropSelect) {
             console.error("Crop select element not found");
@@ -407,13 +419,16 @@ class CropFarmingGame {
     }
 
     async connectWallet() {
+        console.log("Attempting to connect wallet");
         if (typeof window.ethereum !== 'undefined') {
             try {
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                console.log("Accounts received:", accounts);
                 this.web3 = new Web3(window.ethereum);
                 this.accounts = accounts;
 
                 const networkId = await this.web3.eth.net.getId();
+                console.log("Network ID:", networkId);
                 const sepoliaTestnetId = 11155111;
                 if (networkId !== sepoliaTestnetId) {
                     alert('Please connect to the Sepolia testnet in MetaMask');
@@ -422,6 +437,7 @@ class CropFarmingGame {
 
                 try {
                     this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
+                    console.log("Contract initialized");
                 } catch (contractError) {
                     console.error("Error initializing contract:", contractError);
                     alert("Failed to initialize contract. Please check the console for more details.");
@@ -435,8 +451,9 @@ class CropFarmingGame {
 
                 this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
                 this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
+                console.log("Wallet connected successfully");
             } catch (error) {
-                console.error("Detailed error:", error);
+                console.error("Detailed wallet connection error:", error);
                 alert("Failed to connect wallet. Please check the console for more details and try again.");
             }
         } else {
@@ -446,6 +463,7 @@ class CropFarmingGame {
     }
 
     disconnectWallet() {
+        console.log("Disconnecting wallet");
         this.web3 = null;
         this.contract = null;
         this.accounts = null;
@@ -458,10 +476,12 @@ class CropFarmingGame {
         if (this.cropUpdateInterval) {
             clearInterval(this.cropUpdateInterval);
         }
+        console.log("Wallet disconnected");
         alert('Wallet disconnected successfully.');
     }
 
     updateWalletUI() {
+        console.log("Updating wallet UI");
         const playerIdSpan = document.getElementById('player-id');
         const playerBalanceSpan = document.getElementById('player-balance');
         const playerInfo = document.getElementById('player-info');
@@ -480,19 +500,26 @@ class CropFarmingGame {
     }
 
     async updateWeather() {
+        console.log("Updating weather");
         this.currentWeather = Math.floor(Math.random() * 4);
         this.updateWeatherUI();
     }
 
     updateWeatherUI() {
+        console.log("Updating weather UI");
         const weatherContainer = document.getElementById('weather-container');
-        weatherContainer.innerHTML = `
-            <h3>Current Weather: ${this.weatherIcons[this.currentWeather]}</h3>
-            <p>Effect: ${this.weatherEffects[this.currentWeather]}</p>
-        `;
+        if (weatherContainer) {
+            weatherContainer.innerHTML = `
+                <h3>Current Weather: ${this.weatherIcons[this.currentWeather]}</h3>
+                <p>Effect: ${this.weatherEffects[this.currentWeather]}</p>
+            `;
+        } else {
+            console.error("Weather container not found");
+        }
     }
 
     async plantCrop() {
+        console.log("Attempting to plant crop");
         if (!this.contract || !this.accounts) {
             alert("Please connect your wallet first!");
             return;
@@ -504,9 +531,11 @@ class CropFarmingGame {
             
             if (result.status) {
                 const currentValue = this.marketPrices[cropType].currentPrice;
+                console.log(`${cropType} planted successfully!`);
                 alert(`${cropType} planted successfully! Transaction hash: ${result.transactionHash}`);
                 await this.updateFarmStatus();
             } else {
+                console.error("Failed to plant crop");
                 alert("Failed to plant crop. Please try again.");
             }
         } catch (error) {
@@ -516,6 +545,7 @@ class CropFarmingGame {
     }
 
     async harvestCrops() {
+        console.log("Attempting to harvest all crops");
         if (!this.contract || !this.accounts) {
             alert("Please connect your wallet first!");
             return;
@@ -525,9 +555,11 @@ class CropFarmingGame {
             const result = await this.contract.methods.harvestCrops(yieldBoostMultiplier).send({ from: this.accounts[0] });
             
             if (result.status) {
+                console.log("All crops harvested successfully!");
                 alert("All crops harvested successfully!");
                 await this.updateFarmStatus();
             } else {
+                console.error("Failed to harvest crops");
                 alert("Failed to harvest crops. Please try again.");
             }
         } catch (error) {
@@ -537,6 +569,7 @@ class CropFarmingGame {
     }
 
     async harvestSingleCrop(index) {
+        console.log(`Attempting to harvest crop at index ${index}`);
         if (!this.contract || !this.accounts) {
             alert("Please connect your wallet first!");
             return;
@@ -546,9 +579,11 @@ class CropFarmingGame {
             const result = await this.contract.methods.harvestSingleCrop(index, yieldBoostMultiplier).send({ from: this.accounts[0] });
             
             if (result.status) {
+                console.log("Crop harvested successfully!");
                 alert("Crop harvested successfully!");
                 await this.updateFarmStatus();
             } else {
+                console.error("Failed to harvest crop");
                 alert("Failed to harvest crop. Please try again.");
             }
         } catch (error) {
@@ -558,9 +593,11 @@ class CropFarmingGame {
     }
 
     async updateFarmStatus() {
+        console.log("Updating farm status");
         if (this.contract && this.accounts) {
             try {
                 const farmStatus = await this.contract.methods.getFarmStatus(this.accounts[0]).call();
+                console.log("Raw farm status:", farmStatus);
 
                 let crops, balance;
                 if (Array.isArray(farmStatus) && farmStatus.length === 2) {
@@ -585,6 +622,7 @@ class CropFarmingGame {
                 }
                 this.cropUpdateInterval = setInterval(() => this.updateCropList(), 1000);
 
+                console.log("Farm status updated");
             } catch (error) {
                 console.error("Failed to update farm status:", error);
             }
@@ -594,7 +632,12 @@ class CropFarmingGame {
     }
 
     updateCropList() {
+        console.log("Updating crop list");
         const cropList = document.getElementById('crop-list');
+        if (!cropList) {
+            console.error("Crop list element not found");
+            return;
+        }
         cropList.innerHTML = '';
         if (this.crops.length === 0) {
             cropList.innerHTML = '<li>No crops planted yet.</li>';
@@ -635,48 +678,9 @@ class CropFarmingGame {
         const remainingSeconds = seconds % 60;
         return `${minutes}m ${remainingSeconds}s`;
     }
-
-    async checkFarmStatus() {
-        if (!this.contract || !this.accounts) {
-            console.log("Wallet not connected");
-            return;
-        }
-        try {
-            const farmData = await this.contract.methods.farms(this.accounts[0]).call();
-            console.log("Raw farm data:", farmData);
-            const tokenBalance = await this.contract.methods.getTokenBalance(this.accounts[0]).call();
-            console.log("Token balance:", tokenBalance);
-            const maturityDuration = await this.contract.methods.BASE_MATURITY_DURATION().call();
-            console.log("Maturity duration:", maturityDuration);
-        } catch (error) {
-            console.error("Error checking farm status:", error);
-        }
-    }
-
-    async checkTransactionStatus(txHash) {
-        if (!this.web3) {
-            console.error("Web3 not initialized");
-            return;
-        }
-        try {
-            const tx = await this.web3.eth.getTransaction(txHash);
-            console.log("Transaction details:", tx);
-            if (tx && tx.blockNumber) {
-                const receipt = await this.web3.eth.getTransactionReceipt(txHash);
-                console.log("Transaction receipt:", receipt);
-                alert(`Transaction mined in block ${tx.blockNumber}. Status: ${receipt.status ? 'Success' : 'Failed'}`);
-            } else {
-                alert("Transaction is pending or not found on the network.");
-            }
-        } catch (error) {
-            console.error("Error checking transaction status:", error);
-            alert("Failed to check transaction status: " + error.message);
-        }
-    }
 }
 
 // Initialize the game
+console.log("Starting game initialization");
 const game = new CropFarmingGame();
-
-// Start market fluctuations
-game.startMarketFluctuations();
+console.log("Game initialized");
