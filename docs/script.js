@@ -281,7 +281,12 @@ class CropFarmingGame {
 		"type": "function"
 	}
 ]
-            // ... (your contract ABI here)
+            // Replace this with your actual contract ABI
+            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+            {"inputs":[{"internalType":"string","name":"_cropType","type":"string"},{"internalType":"uint256","name":"growthSpeedMultiplier","type":"uint256"}],"name":"plantCrop","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"yieldBoostMultiplier","type":"uint256"}],"name":"harvestCrops","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"_farmer","type":"address"}],"name":"getFarmStatus","outputs":[{"components":[{"internalType":"string","name":"cropType","type":"string"},{"internalType":"uint256","name":"plantTime","type":"uint256"},{"internalType":"uint256","name":"maturityTime","type":"uint256"}],"internalType":"struct CryptoFarming.Crop[]","name":"","type":"tuple[]"},{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            // ... (other contract functions)
         ];
         this.marketUpdateInterval = 30000;
         this.marketCountdown = 30;
@@ -438,6 +443,7 @@ class CropFarmingGame {
                 try {
                     this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
                     console.log("Contract initialized");
+                    console.log("Available contract methods:", Object.keys(this.contract.methods));
                 } catch (contractError) {
                     console.error("Error initializing contract:", contractError);
                     alert("Failed to initialize contract. Please check the console for more details.");
@@ -446,7 +452,7 @@ class CropFarmingGame {
 
                 this.playerID = this.accounts[0];
                 this.updateWalletUI();
-                this.updateFarmStatus();
+                await this.updateFarmStatus();
                 this.updateWeather();
 
                 this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
@@ -527,6 +533,11 @@ class CropFarmingGame {
         const cropType = document.getElementById('crop-select').value;
         try {
             const growthSpeedMultiplier = this.upgradeSystem.getGrowthSpeedMultiplier();
+            if (!this.contract.methods.plantCrop) {
+                console.error("plantCrop method not found in contract");
+                alert("Contract method 'plantCrop' not found. Please check your contract ABI.");
+                return;
+            }
             const result = await this.contract.methods.plantCrop(cropType, growthSpeedMultiplier).send({ from: this.accounts[0] });
             
             if (result.status) {
@@ -552,6 +563,11 @@ class CropFarmingGame {
         }
         try {
             const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
+            if (!this.contract.methods.harvestCrops) {
+                console.error("harvestCrops method not found in contract");
+                alert("Contract method 'harvestCrops' not found. Please check your contract ABI.");
+                return;
+            }
             const result = await this.contract.methods.harvestCrops(yieldBoostMultiplier).send({ from: this.accounts[0] });
             
             if (result.status) {
@@ -576,6 +592,11 @@ class CropFarmingGame {
         }
         try {
             const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
+            if (!this.contract.methods.harvestSingleCrop) {
+                console.error("harvestSingleCrop method not found in contract");
+                alert("Contract method 'harvestSingleCrop' not found. Please check your contract ABI.");
+                return;
+            }
             const result = await this.contract.methods.harvestSingleCrop(index, yieldBoostMultiplier).send({ from: this.accounts[0] });
             
             if (result.status) {
@@ -596,6 +617,11 @@ class CropFarmingGame {
         console.log("Updating farm status");
         if (this.contract && this.accounts) {
             try {
+                if (!this.contract.methods.getFarmStatus) {
+                    console.error("getFarmStatus method not found in contract");
+                    alert("Contract method 'getFarmStatus' not found. Please check your contract ABI.");
+                    return;
+                }
                 const farmStatus = await this.contract.methods.getFarmStatus(this.accounts[0]).call();
                 console.log("Raw farm status:", farmStatus);
 
@@ -684,3 +710,6 @@ class CropFarmingGame {
 console.log("Starting game initialization");
 const game = new CropFarmingGame();
 console.log("Game initialized");
+
+// Start market fluctuations
+game.startMarketFluctuations();
