@@ -5,11 +5,11 @@ class UpgradeSystem {
             growthSpeed: {
                 name: "Growth Accelerator",
                 levels: [
-                    { cost: 100, effect: 0.9 },
-                    { cost: 250, effect: 0.8 },
-                    { cost: 500, effect: 0.7 },
-                    { cost: 1000, effect: 0.6 },
-                    { cost: 2000, effect: 0.5 }
+                    { cost: 100, effect: 100 },  // 1.00x speed
+                    { cost: 250, effect: 90 },   // 0.90x speed (10% faster)
+                    { cost: 500, effect: 80 },   // 0.80x speed (20% faster)
+                    { cost: 1000, effect: 70 },  // 0.70x speed (30% faster)
+                    { cost: 2000, effect: 60 }   // 0.60x speed (40% faster)
                 ],
                 description: "Reduces crop growth time",
                 currentLevel: 0
@@ -17,11 +17,11 @@ class UpgradeSystem {
             yieldBoost: {
                 name: "Yield Enhancer",
                 levels: [
-                    { cost: 100, effect: 1.1 },
-                    { cost: 250, effect: 1.2 },
-                    { cost: 500, effect: 1.3 },
-                    { cost: 1000, effect: 1.4 },
-                    { cost: 2000, effect: 1.5 }
+                    { cost: 100, effect: 100 },  // 1.00x yield
+                    { cost: 250, effect: 110 },  // 1.10x yield (10% more)
+                    { cost: 500, effect: 120 },  // 1.20x yield (20% more)
+                    { cost: 1000, effect: 130 }, // 1.30x yield (30% more)
+                    { cost: 2000, effect: 140 }  // 1.40x yield (40% more)
                 ],
                 description: "Increases harvest yield",
                 currentLevel: 0
