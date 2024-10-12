@@ -19,7 +19,6 @@ class CropFarmingGame {
         this.marketPrices = {};
         this.contractAddress = '0xf19b95A8b666E1fe91448f7e4184df14D36BA05C';
         this.contractABI = [
-            [
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -281,13 +280,7 @@ class CropFarmingGame {
 		"stateMutability": "view",
 		"type": "function"
 	}
-]
-            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
-            {"inputs":[{"internalType":"string","name":"_cropType","type":"string"},{"internalType":"uint256","name":"growthSpeedMultiplier","type":"uint256"}],"name":"plantCrop","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"yieldBoostMultiplier","type":"uint256"}],"name":"harvestCrops","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"_farmer","type":"address"}],"name":"getFarmStatus","outputs":[{"components":[{"internalType":"string","name":"cropType","type":"string"},{"internalType":"uint256","name":"plantTime","type":"uint256"},{"internalType":"uint256","name":"maturityTime","type":"uint256"}],"internalType":"struct CryptoFarming.Crop[]","name":"","type":"tuple[]"},{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-            // ... (other contract functions)
-        ];
+];
         this.marketUpdateInterval = 30000;
         this.marketCountdown = 30;
         this.lastMarketUpdate = Date.now();
@@ -318,9 +311,24 @@ class CropFarmingGame {
         } else {
             console.error("Connect wallet button not found");
         }
-        document.getElementById('disconnect-wallet-btn').addEventListener('click', () => this.disconnectWallet());
-        document.getElementById('plant-btn').addEventListener('click', () => this.plantCrop());
-        document.getElementById('harvest-btn').addEventListener('click', () => this.harvestCrops());
+        const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
+        if (disconnectWalletBtn) {
+            disconnectWalletBtn.addEventListener('click', () => this.disconnectWallet());
+        } else {
+            console.error("Disconnect wallet button not found");
+        }
+        const plantBtn = document.getElementById('plant-btn');
+        if (plantBtn) {
+            plantBtn.addEventListener('click', () => this.plantCrop());
+        } else {
+            console.error("Plant button not found");
+        }
+        const harvestBtn = document.getElementById('harvest-btn');
+        if (harvestBtn) {
+            harvestBtn.addEventListener('click', () => this.harvestCrops());
+        } else {
+            console.error("Harvest button not found");
+        }
         this.updateCropTypes();
         this.updateMarketUI();
         this.updateWeatherUI();
@@ -517,8 +525,18 @@ class CropFarmingGame {
 
     async updateWeather() {
         console.log("Updating weather");
-        this.currentWeather = Math.floor(Math.random() * 4);
-        this.updateWeatherUI();
+        if (this.contract && this.accounts) {
+            try {
+                const weather = await this.contract.methods.getCurrentWeather().call();
+                this.currentWeather = parseInt(weather);
+                this.updateWeatherUI();
+            } catch (error) {
+                console.error("Error updating weather:", error);
+            }
+        } else {
+            this.currentWeather = Math.floor(Math.random() * 4);
+            this.updateWeatherUI();
+        }
     }
 
     updateWeatherUI() {
