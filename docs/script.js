@@ -16,253 +16,253 @@ class CropFarmingGame {
         this.marketPrices = {};
         this.maturityTimers = [];
         this.contractAddress = '0x057048fa519b97a552f11297511c0A3f71d0d4e8';
-        this.contractABI = [ [
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "farmer",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "cropType",
-				"type": "string"
-			}
-		],
-		"name": "CropPlanted",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "farmer",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "CropsHarvested",
-		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "harvestCrops",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_index",
-				"type": "uint256"
-			}
-		],
-		"name": "harvestSingleCrop",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "_cropType",
-				"type": "string"
-			}
-		],
-		"name": "plantCrop",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "updateWeather",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "enum CryptoFarming.Weather",
-				"name": "newWeather",
-				"type": "uint8"
-			}
-		],
-		"name": "WeatherChanged",
-		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "BASE_MATURITY_DURATION",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "currentWeather",
-		"outputs": [
-			{
-				"internalType": "enum CryptoFarming.Weather",
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "farms",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "lastHarvestTime",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "tokenBalance",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getCurrentWeather",
-		"outputs": [
-			{
-				"internalType": "enum CryptoFarming.Weather",
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_farmer",
-				"type": "address"
-			}
-		],
-		"name": "getFarmStatus",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "cropType",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "plantTime",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "maturityTime",
-						"type": "uint256"
-					}
-				],
-				"internalType": "struct CryptoFarming.Crop[]",
-				"name": "",
-				"type": "tuple[]"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_farmer",
-				"type": "address"
-			}
-		],
-		"name": "getTokenBalance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "lastWeatherChange",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "WEATHER_DURATION",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-] ];
+        this.contractABI = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "internalType": "address",
+                        "name": "farmer",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "string",
+                        "name": "cropType",
+                        "type": "string"
+                    }
+                ],
+                "name": "CropPlanted",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "internalType": "address",
+                        "name": "farmer",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "CropsHarvested",
+                "type": "event"
+            },
+            {
+                "inputs": [],
+                "name": "harvestCrops",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_index",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "harvestSingleCrop",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "_cropType",
+                        "type": "string"
+                    }
+                ],
+                "name": "plantCrop",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "updateWeather",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "internalType": "enum CryptoFarming.Weather",
+                        "name": "newWeather",
+                        "type": "uint8"
+                    }
+                ],
+                "name": "WeatherChanged",
+                "type": "event"
+            },
+            {
+                "inputs": [],
+                "name": "BASE_MATURITY_DURATION",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "currentWeather",
+                "outputs": [
+                    {
+                        "internalType": "enum CryptoFarming.Weather",
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "farms",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "lastHarvestTime",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenBalance",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getCurrentWeather",
+                "outputs": [
+                    {
+                        "internalType": "enum CryptoFarming.Weather",
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_farmer",
+                        "type": "address"
+                    }
+                ],
+                "name": "getFarmStatus",
+                "outputs": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "string",
+                                "name": "cropType",
+                                "type": "string"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "plantTime",
+                                "type": "uint256"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "maturityTime",
+                                "type": "uint256"
+                            }
+                        ],
+                        "internalType": "struct CryptoFarming.Crop[]",
+                        "name": "",
+                        "type": "tuple[]"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_farmer",
+                        "type": "address"
+                    }
+                ],
+                "name": "getTokenBalance",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "lastWeatherChange",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "WEATHER_DURATION",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
         this.marketUpdateInterval = 30000; // 30 seconds in milliseconds
         this.marketCountdown = 30;
         this.lastMarketUpdate = Date.now();
@@ -405,17 +405,15 @@ class CropFarmingGame {
                 this.accounts = accounts;
 
                 const networkId = await this.web3.eth.net.getId();
-                const sepoliaTestnetId = 11155111;
+                const sepoliaTestnetId = 11155111; // Ensure this is the right network
                 if (networkId !== sepoliaTestnetId) {
                     alert('Please connect to the Sepolia testnet in MetaMask');
                     return;
                 }
 
-                // Ensure the contract is initialized only once
-                if (!this.contract) {
-                    this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
-                    console.log('Contract initialized:', this.contract);
-                }
+                // Initialize contract
+                this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
+                console.log('Contract initialized:', this.contract); // This should show contract methods
 
                 this.playerID = this.accounts[0];
                 this.updateWalletUI();
