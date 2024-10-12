@@ -133,7 +133,7 @@
             margin-right: 20px;
         }
 
-        #farm-actions, #farm-status {
+        #farm-actions, #farm-status, #upgrades {
             background-color: var(--card-background);
             border-radius: 10px;
             padding: 1.5rem;
@@ -243,6 +243,19 @@
         .connected #connect-wallet-btn {
             display: none;
         }
+
+        .upgrade-item {
+            background-color: #e8f5e9;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .upgrade-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -282,9 +295,13 @@
                 <h2><i class="fas fa-warehouse"></i> Your Farm</h2>
                 <ul id="crop-list"></ul>
             </section>
+            <section id="upgrades">
+                <h2><i class="fas fa-arrow-up"></i> Farm Upgrades</h2>
+                <div id="upgrade-container"></div>
+            </section>
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
