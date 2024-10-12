@@ -53,7 +53,7 @@ class UpgradeSystem {
         });
     }
 
-    purchaseUpgrade(upgradeKey) {
+    async purchaseUpgrade(upgradeKey) {
         const upgrade = this.upgrades[upgradeKey];
         const nextLevel = upgrade.currentLevel + 1;
 
@@ -64,18 +64,31 @@ class UpgradeSystem {
 
         const cost = upgrade.levels[nextLevel].cost;
 
+        // Fetch the latest balance from the contract
+        const latestBalance = await this.game.contract.methods.getTokenBalance(this.game.accounts[0]).call();
+        this.game.balance = parseInt(latestBalance);
+
         if (this.game.balance < cost) {
             alert("Not enough tokens to purchase this upgrade!");
             return;
         }
 
-        this.game.balance -= cost;
-        upgrade.currentLevel = nextLevel;
-
-        this.updateUpgradeUI(upgradeKey);
-        this.game.updateWalletUI();
-
-        alert(`${upgrade.name} upgraded to level ${nextLevel}!`);
+        try {
+            // Call the contract method to purchase the upgrade
+            const result = await this.game.contract.methods.purchaseUpgrade(upgradeKey, nextLevel).send({ from: this.game.accounts[0] });
+            
+            if (result.status) {
+                upgrade.currentLevel = nextLevel;
+                this.updateUpgradeUI(upgradeKey);
+                await this.game.updateFarmStatus();
+                alert(`${upgrade.name} upgraded to level ${nextLevel}!`);
+            } else {
+                alert("Failed to purchase upgrade. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error purchasing upgrade:", error);
+            alert(`Failed to purchase upgrade: ${error.message}`);
+        }
     }
 
     updateUpgradeUI(upgradeKey) {
