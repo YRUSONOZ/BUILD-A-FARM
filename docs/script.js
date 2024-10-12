@@ -16,8 +16,270 @@ class CropFarmingGame {
             { name: "Dogecoin", baseGrowthTime: 60, baseReward: 10, basePlantCost: 1 }
         ];
         this.marketPrices = {};
-        this.contractAddress = '0x057048fa519b97a552f11297511c0A3f71d0d4e8';
-        this.contractABI = [
+        this.contractAddress = '0xf19b95a8b666e1fe91448f7e4184df14d36ba05c';
+        this.contractABI = [[
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "farmer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "cropType",
+				"type": "string"
+			}
+		],
+		"name": "CropPlanted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "farmer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "CropsHarvested",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "yieldBoostMultiplier",
+				"type": "uint256"
+			}
+		],
+		"name": "harvestCrops",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_index",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "yieldBoostMultiplier",
+				"type": "uint256"
+			}
+		],
+		"name": "harvestSingleCrop",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_cropType",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "growthSpeedMultiplier",
+				"type": "uint256"
+			}
+		],
+		"name": "plantCrop",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "updateWeather",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "enum CryptoFarming.Weather",
+				"name": "newWeather",
+				"type": "uint8"
+			}
+		],
+		"name": "WeatherChanged",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "BASE_MATURITY_DURATION",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "currentWeather",
+		"outputs": [
+			{
+				"internalType": "enum CryptoFarming.Weather",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "farms",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "lastHarvestTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenBalance",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getCurrentWeather",
+		"outputs": [
+			{
+				"internalType": "enum CryptoFarming.Weather",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_farmer",
+				"type": "address"
+			}
+		],
+		"name": "getFarmStatus",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "cropType",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "plantTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "maturityTime",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct CryptoFarming.Crop[]",
+				"name": "",
+				"type": "tuple[]"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_farmer",
+				"type": "address"
+			}
+		],
+		"name": "getTokenBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "lastWeatherChange",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "WEATHER_DURATION",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
             // ... (your contract ABI here)
         ];
         this.marketUpdateInterval = 30000;
