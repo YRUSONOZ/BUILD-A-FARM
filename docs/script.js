@@ -441,9 +441,19 @@ class CropFarmingGame {
                 }
 
                 try {
+                    console.log("Contract ABI:", JSON.stringify(this.contractABI));
+                    console.log("Contract Address:", this.contractAddress);
                     this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
-                    console.log("Contract initialized");
-                    console.log("Available contract methods:", Object.keys(this.contract.methods));
+                    console.log("Contract initialized:", this.contract);
+                    console.log("Contract methods:", this.contract.methods);
+                    
+                    // Test calling a method
+                    try {
+                        const result = await this.contract.methods.getFarmStatus(this.accounts[0]).call();
+                        console.log("getFarmStatus result:", result);
+                    } catch (methodError) {
+                        console.error("Error calling getFarmStatus:", methodError);
+                    }
                 } catch (contractError) {
                     console.error("Error initializing contract:", contractError);
                     alert("Failed to initialize contract. Please check the console for more details.");
@@ -532,6 +542,8 @@ class CropFarmingGame {
         }
         const cropType = document.getElementById('crop-select').value;
         try {
+            console.log("Contract:", this.contract);
+            console.log("Contract methods:", this.contract.methods);
             const growthSpeedMultiplier = this.upgradeSystem.getGrowthSpeedMultiplier();
             if (!this.contract.methods.plantCrop) {
                 console.error("plantCrop method not found in contract");
