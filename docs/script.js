@@ -523,10 +523,10 @@ class CropFarmingGame {
 				"type": "uint256"
 			}
 		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-		];
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
         this.marketUpdateInterval = 300000; // 5 minutes in milliseconds
         this.marketCountdown = 300;
         this.lastMarketUpdate = Date.now();
