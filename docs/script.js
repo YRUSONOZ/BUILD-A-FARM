@@ -2,8 +2,21 @@ import UpgradeSystem from './upgrades.js';
 
 class CropFarmingGame {
     constructor() {
-        // ... (previous code remains the same)
-
+        console.log("Initializing CropFarmingGame");
+        this.playerID = 'Not Connected';
+        this.balance = 0;
+        this.crops = [];
+        this.cropIcons = {
+            'Bitcoin': '🪙',
+            'Ethereum': '💎',
+            'Dogecoin': '🐶'
+        };
+        this.cropTypes = [
+            { name: "Bitcoin", baseGrowthTime: 300, baseReward: 50, basePlantCost: 10 },
+            { name: "Ethereum", baseGrowthTime: 180, baseReward: 30, basePlantCost: 5 },
+            { name: "Dogecoin", baseGrowthTime: 60, baseReward: 10, basePlantCost: 1 }
+        ];
+        this.marketPrices = {};
         this.contractAddress = '0xf19b95A8b666E1fe91448f7e4184df14D36BA05C';
         this.contractABI = [
             {
@@ -441,7 +454,6 @@ class CropFarmingGame {
                     this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
                     console.log("Contract initialized:", this.contract);
                     console.log("Contract methods:", Object.keys(this.contract.methods));
-                    
                     // Test calling a method
                     try {
                         const result = await this.contract.methods.getFarmStatus(this.accounts[0]).call();
