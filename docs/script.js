@@ -19,267 +19,7 @@ class CropFarmingGame {
         this.marketPrices = {};
         this.contractAddress = '0xf19b95A8b666E1fe91448f7e4184df14D36BA05C';
         this.contractABI = [
-            {
-                "inputs": [],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": false,
-                        "internalType": "address",
-                        "name": "farmer",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "string",
-                        "name": "cropType",
-                        "type": "string"
-                    }
-                ],
-                "name": "CropPlanted",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": false,
-                        "internalType": "address",
-                        "name": "farmer",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "CropsHarvested",
-                "type": "event"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "yieldBoostMultiplier",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "harvestCrops",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "_index",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "yieldBoostMultiplier",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "harvestSingleCrop",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "string",
-                        "name": "_cropType",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "growthSpeedMultiplier",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "plantCrop",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "updateWeather",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": false,
-                        "internalType": "enum CryptoFarming.Weather",
-                        "name": "newWeather",
-                        "type": "uint8"
-                    }
-                ],
-                "name": "WeatherChanged",
-                "type": "event"
-            },
-            {
-                "inputs": [],
-                "name": "BASE_MATURITY_DURATION",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "currentWeather",
-                "outputs": [
-                    {
-                        "internalType": "enum CryptoFarming.Weather",
-                        "name": "",
-                        "type": "uint8"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "name": "farms",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "lastHarvestTime",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "tokenBalance",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "getCurrentWeather",
-                "outputs": [
-                    {
-                        "internalType": "enum CryptoFarming.Weather",
-                        "name": "",
-                        "type": "uint8"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_farmer",
-                        "type": "address"
-                    }
-                ],
-                "name": "getFarmStatus",
-                "outputs": [
-                    {
-                        "components": [
-                            {
-                                "internalType": "string",
-                                "name": "cropType",
-                                "type": "string"
-                            },
-                            {
-                                "internalType": "uint256",
-                                "name": "plantTime",
-                                "type": "uint256"
-                            },
-                            {
-                                "internalType": "uint256",
-                                "name": "maturityTime",
-                                "type": "uint256"
-                            }
-                        ],
-                        "internalType": "struct CryptoFarming.Crop[]",
-                        "name": "",
-                        "type": "tuple[]"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_farmer",
-                        "type": "address"
-                    }
-                ],
-                "name": "getTokenBalance",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "lastWeatherChange",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "WEATHER_DURATION",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            }
+            // Your contract ABI here
         ];
         this.marketUpdateInterval = 30000;
         this.marketCountdown = 30;
@@ -617,33 +357,33 @@ class CropFarmingGame {
     }
 
     async harvestSingleCrop(index) {
-    console.log(`Attempting to harvest crop at index ${index}`);
-    if (!this.contract || !this.accounts) {
-        alert("Please connect your wallet first!");
-        return;
-    }
-    try {
-        const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
-        if (!this.contract.methods.harvestSingleCrop) {
-            console.error("harvestSingleCrop method not found in contract");
-            alert("Contract method 'harvestSingleCrop' not found. Please check your contract ABI.");
+        console.log(`Attempting to harvest crop at index ${index}`);
+        if (!this.contract || !this.accounts) {
+            alert("Please connect your wallet first!");
             return;
         }
-        const result = await this.contract.methods.harvestSingleCrop(index, yieldBoostMultiplier).send({ from: this.accounts[0] });
-        
-        if (result.status) {
-            console.log("Crop harvested successfully!");
-            alert("Crop harvested successfully!");
-            await this.updateFarmStatus();
-        } else {
-            console.error("Failed to harvest crop");
-            alert("Failed to harvest crop. Please try again.");
+        try {
+            const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
+            if (!this.contract.methods.harvestSingleCrop) {
+                console.error("harvestSingleCrop method not found in contract");
+                alert("Contract method 'harvestSingleCrop' not found. Please check your contract ABI.");
+                return;
+            }
+            const result = await this.contract.methods.harvestSingleCrop(index, yieldBoostMultiplier).send({ from: this.accounts[0] });
+            
+            if (result.status) {
+                console.log("Crop harvested successfully!");
+                alert("Crop harvested successfully!");
+                await this.updateFarmStatus();
+            } else {
+                console.error("Failed to harvest crop");
+                alert("Failed to harvest crop. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error harvesting crop:", error);
+            alert(`Failed to harvest crop: ${error.message}`);
         }
-    } catch (error) {
-        console.error("Error harvesting crop:", error);
-        alert(`Failed to harvest crop: ${error.message}`);
     }
-}
 
     async updateFarmStatus() {
         console.log("Updating farm status");
@@ -694,57 +434,57 @@ class CropFarmingGame {
     }
 
     async updateCropList() {
-    console.log("Updating crop list");
-    const cropList = document.getElementById('crop-list');
-    if (!cropList) {
-        console.error("Crop list element not found");
-        return;
-    }
-    cropList.innerHTML = '';
-    if (this.crops.length === 0) {
-        cropList.innerHTML = '<li>No crops planted yet.</li>';
-    } else {
-        for (let index = 0; index < this.crops.length; index++) {
-            const crop = this.crops[index];
-            const li = document.createElement('li');
-            const currentTime = Math.floor(Date.now() / 1000);
-            const timeToMaturity = Math.max(0, parseInt(crop.maturityTime) - currentTime);
-
-            let currentValue;
-            if (timeToMaturity <= 0) {
-                // Estimate harvest reward based on base reward and current market price
-                const cropType = this.cropTypes.find(c => c.name === crop.cropType);
-                const baseReward = cropType ? cropType.baseReward : 0;
-                const marketPrice = this.marketPrices[crop.cropType] ? this.marketPrices[crop.cropType].currentPrice : baseReward;
-                const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
-                currentValue = Math.floor(baseReward * (marketPrice / baseReward) * (yieldBoostMultiplier / 100));
-            } else {
-                currentValue = this.marketPrices[crop.cropType] ? this.marketPrices[crop.cropType].currentPrice : 0;
-            }
-
-            if (timeToMaturity > 0) {
-                li.innerHTML = `
-                    <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
-                    <span>Matures in ${this.formatTime(timeToMaturity)}</span>
-                `;
-            } else {
-                li.innerHTML = `
-                    <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
-                    <button class="harvest-single-btn" data-index="${index}">Harvest (Estimated Value: ${currentValue} tokens)</button>
-                `;
-                li.style.backgroundColor = '#c8e6c9';
-            }
-            cropList.appendChild(li);
+        console.log("Updating crop list");
+        const cropList = document.getElementById('crop-list');
+        if (!cropList) {
+            console.error("Crop list element not found");
+            return;
         }
+        cropList.innerHTML = '';
+        if (this.crops.length === 0) {
+            cropList.innerHTML = '<li>No crops planted yet.</li>';
+        } else {
+            for (let index = 0; index < this.crops.length; index++) {
+                const crop = this.crops[index];
+                const li = document.createElement('li');
+                const currentTime = Math.floor(Date.now() / 1000);
+                const timeToMaturity = Math.max(0, parseInt(crop.maturityTime) - currentTime);
 
-        document.querySelectorAll('.harvest-single-btn').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const index = event.target.getAttribute('data-index');
-                this.harvestSingleCrop(index);
+                let currentValue;
+                if (timeToMaturity <= 0) {
+                    // Estimate harvest reward based on base reward and current market price
+                    const cropType = this.cropTypes.find(c => c.name === crop.cropType);
+                    const baseReward = cropType ? cropType.baseReward : 0;
+                    const marketPrice = this.marketPrices[crop.cropType] ? this.marketPrices[crop.cropType].currentPrice : baseReward;
+                    const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
+                    currentValue = Math.floor(baseReward * (marketPrice / baseReward) * (yieldBoostMultiplier / 100));
+                } else {
+                    currentValue = this.marketPrices[crop.cropType] ? this.marketPrices[crop.cropType].currentPrice : 0;
+                }
+
+                if (timeToMaturity > 0) {
+                    li.innerHTML = `
+                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
+                        <span>Matures in ${this.formatTime(timeToMaturity)}</span>
+                    `;
+                } else {
+                    li.innerHTML = `
+                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
+                        <button class="harvest-single-btn" data-index="${index}">Harvest (Estimated Value: ${currentValue} tokens)</button>
+                    `;
+                    li.style.backgroundColor = '#c8e6c9';
+                }
+                cropList.appendChild(li);
+            }
+
+            document.querySelectorAll('.harvest-single-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const index = event.target.getAttribute('data-index');
+                    this.harvestSingleCrop(index);
+                });
             });
-        });
+        }
     }
-}
 
     formatTime(seconds) {
         const minutes = Math.floor(seconds / 60);
