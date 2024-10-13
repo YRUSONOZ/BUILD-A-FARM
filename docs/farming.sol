@@ -31,9 +31,9 @@ contract CryptoFarming {
         lastWeatherChange = block.timestamp;
     }
 
-    function plantCrop(string memory _cropType) public {
+    function plantCrop(string memory _cropType, uint256 growthSpeedMultiplier) public {
         Farm storage farm = farms[msg.sender];
-        uint256 maturityTime = calculateMaturityTime(BASE_MATURITY_DURATION);
+        uint256 maturityTime = calculateMaturityTime(BASE_MATURITY_DURATION, growthSpeedMultiplier);
         farm.crops.push(Crop({
             cropType: _cropType,
             plantTime: block.timestamp,
@@ -43,14 +43,14 @@ contract CryptoFarming {
         emit CropPlanted(msg.sender, _cropType);
     }
 
-    function harvestCrops() public {
+    function harvestCrops(uint256 yieldBoostMultiplier) public {
         Farm storage farm = farms[msg.sender];
         uint256 reward = 0;
         uint256 i = 0;
 
         while (i < farm.crops.length) {
             if (farm.crops[i].maturityTime <= block.timestamp) {
-                reward += calculateHarvestReward(10); // Base reward of 10 tokens
+                reward += calculateHarvestReward(10, yieldBoostMultiplier); // Base reward of 10 tokens
                 farm.crops[i] = farm.crops[farm.crops.length - 1];
                 farm.crops.pop();
             } else {
@@ -65,13 +65,13 @@ contract CryptoFarming {
         }
     }
 
-    function harvestSingleCrop(uint256 _index) public {
+    function harvestSingleCrop(uint256 _index, uint256 yieldBoostMultiplier) public {
         Farm storage farm = farms[msg.sender];
         require(_index < farm.crops.length, "Invalid crop index");
         Crop storage crop = farm.crops[_index];
         require(crop.maturityTime <= block.timestamp, "Crop is not ready for harvest");
 
-        uint256 reward = calculateHarvestReward(10); // Base reward of 10 tokens
+        uint256 reward = calculateHarvestReward(10, yieldBoostMultiplier); // Base reward of 10 tokens
         farm.tokenBalance += reward;
 
         // Remove the harvested crop
@@ -114,17 +114,21 @@ contract CryptoFarming {
         }
     }
 
-    function calculateMaturityTime(uint256 baseTime) private view returns (uint256) {
+    function calculateMaturityTime(uint256 baseTime, uint256 growthSpeedMultiplier) private view returns (uint256) {
         Weather weather = getCurrentWeather();
-        if (weather == Weather.Sunny) return baseTime * 8 / 10; // 20% faster
-        if (weather == Weather.Drought) return baseTime * 12 / 10; // 20% slower
-        return baseTime; // No change for Rainy or CryptoWinter
+        uint256 weatherMultiplier = 100;
+        if (weather == Weather.Sunny) weatherMultiplier = 80; // 20% faster
+        if (weather == Weather.Drought) weatherMultiplier = 120; // 20% slower
+
+        return (baseTime * weatherMultiplier * growthSpeedMultiplier) / 10000; // Divide by 10000 to account for percentages
     }
 
-    function calculateHarvestReward(uint256 baseReward) private view returns (uint256) {
+    function calculateHarvestReward(uint256 baseReward, uint256 yieldBoostMultiplier) private view returns (uint256) {
         Weather weather = getCurrentWeather();
-        if (weather == Weather.Rainy) return baseReward * 12 / 10; // 20% more yield
-        if (weather == Weather.CryptoWinter) return baseReward * 8 / 10; // 20% less yield
-        return baseReward; // No change for Sunny or Drought
+        uint256 weatherMultiplier = 100;
+        if (weather == Weather.Rainy) weatherMultiplier = 120; // 20% more yield
+        if (weather == Weather.CryptoWinter) weatherMultiplier = 80; // 20% less yield
+
+        return (baseReward * weatherMultiplier * yieldBoostMultiplier) / 10000; // Divide by 10000 to account for percentages
     }
 }
