@@ -17,7 +17,6 @@ class CropFarmingGame {
         this.marketPrices = {};
         this.contractAddress = '0x3563B08616b3032657C2546fcf6c81CDf8ac4A1C';
         this.contractABI = [
-            [
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -423,7 +422,6 @@ class CropFarmingGame {
 		"type": "function"
 	}
 ]
-        ];
         this.marketUpdateInterval = 300000; // 5 minutes in milliseconds
         this.marketCountdown = 300;
         this.lastMarketUpdate = Date.now();
