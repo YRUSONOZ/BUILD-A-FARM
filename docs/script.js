@@ -672,7 +672,10 @@ class CropFarmingGame {
                 this.crops = crops;
                 this.balance = parseInt(balance);
                 this.updateWalletUI();
-                this.upgradeSystem.updateUpgradeUI();
+                if (this.upgradeSystem) {
+                    this.upgradeSystem.updateUpgradeUI('growthSpeed');
+                    this.upgradeSystem.updateUpgradeUI('yieldBoost');
+                }
 
                 await this.updateCropList();
 
