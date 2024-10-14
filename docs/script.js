@@ -708,13 +708,23 @@ class CropFarmingGame {
             console.log(`Using fallback Scaling Factor: ${scalingFactor}`);
         }
 
-        const priceAdjustedReward = (baseReward * marketPrice) / scalingFactor;
-        console.log(`Price Adjusted Reward: ${priceAdjustedReward}`);
+        // Use BigNumber for precise calculations
+        const BN = this.web3.utils.BN;
+        const baseRewardBN = new BN(baseReward);
+        const marketPriceBN = new BN(marketPrice);
+        const scalingFactorBN = new BN(scalingFactor);
+        const weatherMultiplierBN = new BN(weatherMultiplier);
+        const yieldBoostMultiplierBN = new BN(yieldBoostMultiplier);
 
-        const estimatedReward = (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
-        console.log(`Estimated Reward: ${estimatedReward}`);
+        // Calculate priceAdjustedReward: (baseReward * marketPrice) / scalingFactor
+        const priceAdjustedReward = baseRewardBN.mul(marketPriceBN).div(scalingFactorBN);
+        console.log(`Price Adjusted Reward: ${priceAdjustedReward.toString()}`);
+
+        // Calculate estimatedReward: (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000
+        const estimatedReward = priceAdjustedReward.mul(weatherMultiplierBN).mul(yieldBoostMultiplierBN).div(new BN(10000));
+        console.log(`Estimated Reward: ${estimatedReward.toString()}`);
         
-        return Math.floor(estimatedReward);
+        return estimatedReward.toString();
     }
 
     async updateCropTypes() {
@@ -736,7 +746,7 @@ class CropFarmingGame {
                 console.error(`Error calculating estimated reward for ${crop.name}:`, error);
                 estimatedReward = "N/A";
             }
-            option.textContent = `${crop.name} (Cost: ${crop.basePlantCost} tokens, Estimated Value: ${estimatedReward} tokens)`;
+            option.textContent = `${crop.name} (Cost: ${crop.basePlantCost} tokens, Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens)`;
             cropSelect.appendChild(option);
         }
     }
@@ -771,12 +781,12 @@ class CropFarmingGame {
                     li.innerHTML = `
                         <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
                         <span>Matures in ${this.formatTime(timeToMaturity)}</span>
-                        <span>Estimated Value: ${estimatedReward} tokens</span>
+                        <span>Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens</span>
                     `;
                 } else {
                     li.innerHTML = `
                         <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
-                        <button class="harvest-single-btn" data-index="${index}">Harvest (Estimated Value: ${estimatedReward} tokens)</button>
+                        <button class="harvest-single-btn" data-index="${index}">Harvest (Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens)</button>
                     `;
                     li.style.backgroundColor = '#c8e6c9';
                 }
@@ -790,6 +800,13 @@ class CropFarmingGame {
                 });
             });
         }
+    }
+
+    formatTokenAmount(amount) {
+        if (amount === "N/A") return amount;
+        const amountFloat = parseFloat(amount);
+        if (isNaN(amountFloat)) return "0";
+        return amountFloat.toFixed(2);
     }
 
     async connectWallet() {
