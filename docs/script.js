@@ -485,7 +485,7 @@ class CropFarmingGame {
                     }
                 ],
                 "name": "marketPrices",
-                "outputs": [
+                 "outputs": [
                     {
                         "internalType": "uint256",
                         "name": "price",
@@ -627,15 +627,15 @@ class CropFarmingGame {
         if (this.contract && this.accounts) {
             for (const crop of this.cropTypes) {
                 try {
-                    const newPrice = Math.floor(Math.random() * 100) + 1; // Random price between 1 and 100
-                    await this.contract.methods.updateMarketPrice(crop.name, newPrice).send({ from: this.accounts[0] });
-                    this.marketPrices[crop.name].currentPrice = newPrice;
+                    const newPrice = await this.contract.methods.getMarketPrice(crop.name).call();
+                    this.marketPrices[crop.name].currentPrice = parseInt(newPrice);
                     this.marketPrices[crop.name].trend = newPrice > this.marketPrices[crop.name].currentPrice ? 'up' : 'down';
                 } catch (error) {
                     console.error(`Failed to update market price for ${crop.name}:`, error);
                 }
             }
         } else {
+            // Fallback to local price updates if not connected to the contract
             this.cropTypes.forEach(crop => {
                 const changePercent = Math.random() * 0.2;
                 const changeAmount = crop.baseReward * changePercent;
@@ -654,7 +654,7 @@ class CropFarmingGame {
         }
 
         this.updateMarketUI();
-        this.updateCropTypes();
+        await this.updateCropTypes();
     }
 
     updateMarketUI() {
@@ -673,7 +673,7 @@ class CropFarmingGame {
         });
     }
 
-    updateCropTypes() {
+    async updateCropTypes() {
         console.log("Updating crop types");
         const cropSelect = document.getElementById('crop-select');
         if (!cropSelect) {
@@ -681,13 +681,13 @@ class CropFarmingGame {
             return;
         }
         cropSelect.innerHTML = '';
-        this.cropTypes.forEach((crop) => {
+        for (const crop of this.cropTypes) {
             const option = document.createElement('option');
             option.value = crop.name;
-            const currentPrice = this.marketPrices[crop.name].currentPrice;
-            option.textContent = `${crop.name} (Cost: ${crop.basePlantCost} tokens, Current Value: ${currentPrice.toFixed(2)} tokens)`;
+            const estimatedReward = await this.getEstimatedReward(crop.name, crop.baseReward);
+            option.textContent = `${crop.name} (Cost: ${crop.basePlantCost} tokens, Estimated Value: ${estimatedReward} tokens)`;
             cropSelect.appendChild(option);
-        });
+        }
     }
 
     async connectWallet() {
@@ -786,12 +786,14 @@ class CropFarmingGame {
                 const weather = await this.contract.methods.getCurrentWeather().call();
                 this.currentWeather = parseInt(weather);
                 this.updateWeatherUI();
+                await this.updateCropTypes();
             } catch (error) {
                 console.error("Error updating weather:", error);
             }
         } else {
             this.currentWeather = Math.floor(Math.random() * 4);
             this.updateWeatherUI();
+            await this.updateCropTypes();
         }
     }
 
@@ -978,7 +980,7 @@ class CropFarmingGame {
         if (weather == 1) weatherMultiplier = 120; // Rainy
         if (weather == 3) weatherMultiplier = 80; // CryptoWinter
 
-        const priceAdjustedReward = (baseReward * marketPrice) / 100;
+        const priceAdjustedReward = baseReward * marketPrice;
         const estimatedReward = (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
         
         return Math.floor(estimatedReward);
