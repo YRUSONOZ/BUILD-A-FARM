@@ -708,28 +708,14 @@ class CropFarmingGame {
             console.log(`Using fallback Scaling Factor: ${scalingFactor}`);
         }
 
-        // Use BigNumber for precise calculations
-        const BN = this.web3.utils.BN;
-        const baseRewardBN = new BN(baseReward).mul(new BN(1e18)); // Scale up baseReward
-        const marketPriceBN = new BN(marketPrice);
-        const scalingFactorBN = new BN(scalingFactor);
-        const weatherMultiplierBN = new BN(weatherMultiplier);
-        const yieldBoostMultiplierBN = new BN(yieldBoostMultiplier);
-        const tenThousandBN = new BN(10000);
+        // Use regular JavaScript numbers for calculations
+        const priceAdjustedReward = (baseReward * Number(marketPrice)) / Number(scalingFactor);
+        console.log(`Price Adjusted Reward: ${priceAdjustedReward}`);
 
-        // Calculate priceAdjustedReward: (baseReward * marketPrice) / scalingFactor
-        const priceAdjustedReward = baseRewardBN.mul(marketPriceBN).div(scalingFactorBN);
-        console.log(`Price Adjusted Reward: ${priceAdjustedReward.toString()}`);
-
-        // Calculate estimatedReward: (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000
-        const estimatedReward = priceAdjustedReward.mul(weatherMultiplierBN).mul(yieldBoostMultiplierBN).div(tenThousandBN);
-        console.log(`Estimated Reward: ${estimatedReward.toString()}`);
+        const estimatedReward = (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
+        console.log(`Estimated Reward: ${estimatedReward}`);
         
-        // Convert to a more readable format (in tokens, not Ether)
-        const estimatedRewardTokens = estimatedReward.div(new BN(1e14)).toNumber() / 10000;
-        console.log(`Estimated Reward in Tokens: ${estimatedRewardTokens}`);
-        
-        return estimatedRewardTokens.toString();
+        return estimatedReward.toString();
     }
 
     async updateCropTypes() {
