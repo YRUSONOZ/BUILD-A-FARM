@@ -113,11 +113,15 @@ class CropFarmingGame {
             'Bitcoin': '🪙',
             'Ethereum': '💎',
             'Dogecoin': '🐶'
+            'USDC': '🐶'
+            'Agora': '🐶'
         };
         this.cropTypes = [
             { name: "Bitcoin", baseGrowthTime: 300, baseReward: 50, basePlantCost: 10 },
             { name: "Ethereum", baseGrowthTime: 180, baseReward: 30, basePlantCost: 5 },
-            { name: "Dogecoin", baseGrowthTime: 60, baseReward: 10, basePlantCost: 1 }
+            { name: "Dogecoin", baseGrowthTime: 60, baseReward: 10, basePlantCost: 1 },
+            { name: "USDC", baseGrowthTime: 500, baseReward: 5, basePlantCost: 1 },
+            { name: "Agora", baseGrowthTime: 30, baseReward: 50, basePlantCost: 1 }
         ];
         this.marketPrices = {};
         this.contractAddress = '0xEB7F27A122E1d42f73d038C9eeA3796cCC1c9A46';
