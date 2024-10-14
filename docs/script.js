@@ -115,6 +115,7 @@ class CropFarmingGame {
             'Dogecoin': '🐶'
             'USDC': '🐶'
             'Agora': '🐶'
+	    
         };
         this.cropTypes = [
             { name: "Bitcoin", baseGrowthTime: 300, baseReward: 50, basePlantCost: 10 },
