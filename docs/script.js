@@ -668,6 +668,55 @@ class CropFarmingGame {
         });
     }
 
+    async getEstimatedReward(cropType, baseReward) {
+        console.log(`Calculating estimated reward for ${cropType} with base reward ${baseReward}`);
+        const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
+        console.log(`Yield Boost Multiplier: ${yieldBoostMultiplier}`);
+        
+        let marketPrice;
+        try {
+            marketPrice = await this.contract.methods.getMarketPrice(cropType).call();
+            console.log(`Market Price for ${cropType}: ${marketPrice}`);
+        } catch (error) {
+            console.error(`Error getting market price for ${cropType}:`, error);
+            marketPrice = this.marketPrices[cropType].currentPrice;
+            console.log(`Using fallback market price: ${marketPrice}`);
+        }
+
+        let weather;
+        try {
+            weather = await this.contract.methods.getCurrentWeather().call();
+            console.log(`Current Weather: ${weather}`);
+        } catch (error) {
+            console.error("Error getting current weather:", error);
+            weather = this.currentWeather;
+            console.log(`Using fallback weather: ${weather}`);
+        }
+        
+        let weatherMultiplier = 100;
+        if (weather == 1) weatherMultiplier = 120; // Rainy
+        if (weather == 3) weatherMultiplier = 80; // CryptoWinter
+        console.log(`Weather Multiplier: ${weatherMultiplier}`);
+
+        let scalingFactor;
+        try {
+            scalingFactor = await this.contract.methods.SCALING_FACTOR().call();
+            console.log(`Scaling Factor: ${scalingFactor}`);
+        } catch (error) {
+            console.error("Error getting SCALING_FACTOR:", error);
+            scalingFactor = 1e15; // Fallback value, adjust if needed
+            console.log(`Using fallback Scaling Factor: ${scalingFactor}`);
+        }
+
+        const priceAdjustedReward = (baseReward * marketPrice) / scalingFactor;
+        console.log(`Price Adjusted Reward: ${priceAdjustedReward}`);
+
+        const estimatedReward = (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
+        console.log(`Estimated Reward: ${estimatedReward}`);
+        
+        return Math.floor(estimatedReward);
+    }
+
     async updateCropTypes() {
         console.log("Updating crop types");
         const cropSelect = document.getElementById('crop-select');
@@ -679,9 +728,67 @@ class CropFarmingGame {
         for (const crop of this.cropTypes) {
             const option = document.createElement('option');
             option.value = crop.name;
-            const estimatedReward = await this.getEstimatedReward(crop.name, crop.baseReward);
+            let estimatedReward;
+            try {
+                estimatedReward = await this.getEstimatedReward(crop.name, crop.baseReward);
+                console.log(`Estimated reward for ${crop.name}: ${estimatedReward}`);
+            } catch (error) {
+                console.error(`Error calculating estimated reward for ${crop.name}:`, error);
+                estimatedReward = "N/A";
+            }
             option.textContent = `${crop.name} (Cost: ${crop.basePlantCost} tokens, Estimated Value: ${estimatedReward} tokens)`;
             cropSelect.appendChild(option);
+        }
+    }
+
+    async updateCropList() {
+        console.log("Updating crop list");
+        const cropList = document.getElementById('crop-list');
+        if (!cropList) {
+            console.error("Crop list element not found");
+            return;
+        }
+        cropList.innerHTML = '';
+        if (this.crops.length === 0) {
+            cropList.innerHTML = '<li>No crops planted yet.</li>';
+        } else {
+            for (let index = 0; index < this.crops.length; index++) {
+                const crop = this.crops[index];
+                const li = document.createElement('li');
+                const currentTime = Math.floor(Date.now() / 1000);
+                const timeToMaturity = Math.max(0, parseInt(crop.maturityTime) - currentTime);
+
+                let estimatedReward;
+                try {
+                    estimatedReward = await this.getEstimatedReward(crop.cropType, crop.baseReward);
+                    console.log(`Estimated reward for ${crop.cropType}: ${estimatedReward}`);
+                } catch (error) {
+                    console.error(`Error calculating estimated reward for ${crop.cropType}:`, error);
+                    estimatedReward = "N/A";
+                }
+
+                if (timeToMaturity > 0) {
+                    li.innerHTML = `
+                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
+                        <span>Matures in ${this.formatTime(timeToMaturity)}</span>
+                        <span>Estimated Value: ${estimatedReward} tokens</span>
+                    `;
+                } else {
+                    li.innerHTML = `
+                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
+                        <button class="harvest-single-btn" data-index="${index}">Harvest (Estimated Value: ${estimatedReward} tokens)</button>
+                    `;
+                    li.style.backgroundColor = '#c8e6c9';
+                }
+                cropList.appendChild(li);
+            }
+
+            document.querySelectorAll('.harvest-single-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const index = event.target.getAttribute('data-index');
+                    this.harvestSingleCrop(index);
+                });
+            });
         }
     }
 
@@ -909,77 +1016,6 @@ class CropFarmingGame {
         } else {
             console.log("Wallet not connected, skipping farm status update");
         }
-    }
-
-    async updateCropList() {
-        console.log("Updating crop list");
-        const cropList = document.getElementById('crop-list');
-        if (!cropList) {
-            console.error("Crop list element not found");
-            return;
-        }
-        cropList.innerHTML = '';
-        if (this.crops.length === 0) {
-            cropList.innerHTML = '<li>No crops planted yet.</li>';
-        } else {
-            for (let index = 0; index < this.crops.length; index++) {
-                const crop = this.crops[index];
-                const li = document.createElement('li');
-                const currentTime = Math.floor(Date.now() / 1000);
-                const timeToMaturity = Math.max(0, parseInt(crop.maturityTime) - currentTime);
-
-                let estimatedReward;
-                if (timeToMaturity <= 0) {
-                    estimatedReward = await this.getEstimatedReward(crop.cropType, crop.baseReward);
-                } else {
-                    estimatedReward = "N/A";
-                }
-
-                if (timeToMaturity > 0) {
-                    li.innerHTML = `
-                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
-                        <span>Matures in ${this.formatTime(timeToMaturity)}</span>
-                        <span>Estimated Value: ${estimatedReward} tokens</span>
-                    `;
-                } else {
-                    li.innerHTML = `
-                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
-                        <button class="harvest-single-btn" data-index="${index}">Harvest (Estimated Value: ${estimatedReward} tokens)</button>
-                    `;
-                    li.style.backgroundColor = '#c8e6c9';
-                }
-                cropList.appendChild(li);
-            }
-
-            document.querySelectorAll('.harvest-single-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const index = event.target.getAttribute('data-index');
-                    this.harvestSingleCrop(index);
-                });
-            });
-        }
-    }
-
-    async getEstimatedReward(cropType, baseReward) {
-        const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
-        let marketPrice;
-        try {
-            marketPrice = await this.contract.methods.getMarketPrice(cropType).call();
-        } catch (error) {
-            console.error(`Error getting market price for ${cropType}:`, error);
-            marketPrice = this.marketPrices[cropType].currentPrice;
-        }
-        const weather = await this.contract.methods.getCurrentWeather().call();
-        
-        let weatherMultiplier = 100;
-        if (weather == 1) weatherMultiplier = 120; // Rainy
-        if (weather == 3) weatherMultiplier = 80; // CryptoWinter
-
-        const scalingFactor = await this.contract.methods.SCALING_FACTOR().call();
-        const priceAdjustedReward = (baseReward * marketPrice) / scalingFactor;
-        const estimatedReward = (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
-        
-        return Math.floor(estimatedReward);
     }
 
     formatTime(seconds) {
