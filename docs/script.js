@@ -710,7 +710,7 @@ class CropFarmingGame {
 
         // Use BigNumber for precise calculations
         const BN = this.web3.utils.BN;
-        const baseRewardBN = new BN(baseReward);
+        const baseRewardBN = new BN(baseReward).mul(new BN(1e18)); // Scale up baseReward
         const marketPriceBN = new BN(marketPrice);
         const scalingFactorBN = new BN(scalingFactor);
         const weatherMultiplierBN = new BN(weatherMultiplier);
@@ -725,11 +725,11 @@ class CropFarmingGame {
         const estimatedReward = priceAdjustedReward.mul(weatherMultiplierBN).mul(yieldBoostMultiplierBN).div(tenThousandBN);
         console.log(`Estimated Reward: ${estimatedReward.toString()}`);
         
-        // Convert to a more readable format
-        const estimatedRewardEth = this.web3.utils.fromWei(estimatedReward.toString(), 'ether');
-        console.log(`Estimated Reward in Ether: ${estimatedRewardEth}`);
+        // Convert to a more readable format (in tokens, not Ether)
+        const estimatedRewardTokens = estimatedReward.div(new BN(1e14)).toNumber() / 10000;
+        console.log(`Estimated Reward in Tokens: ${estimatedRewardTokens}`);
         
-        return estimatedRewardEth;
+        return estimatedRewardTokens.toString();
     }
 
     async updateCropTypes() {
@@ -811,6 +811,7 @@ class CropFarmingGame {
         if (amount === "N/A") return amount;
         const amountFloat = parseFloat(amount);
         if (isNaN(amountFloat)) return "0.0000";
+        if (amountFloat < 0.0001) return "<0.0001";
         return amountFloat.toFixed(4); // Display up to 4 decimal places
     }
 
