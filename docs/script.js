@@ -514,14 +514,14 @@ class CropFarmingGame {
 		"outputs": [
 			{
 				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-];
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
         this.marketUpdateInterval = 300000; // 5 minutes in milliseconds
         this.marketCountdown = 300;
         this.lastMarketUpdate = Date.now();
@@ -704,7 +704,7 @@ class CropFarmingGame {
             console.log(`Scaling Factor: ${scalingFactor}`);
         } catch (error) {
             console.error("Error getting SCALING_FACTOR:", error);
-            scalingFactor = 1e15; // Fallback value, adjust if needed
+            scalingFactor = '1000000000000000'; // Fallback value, adjust if needed
             console.log(`Using fallback Scaling Factor: ${scalingFactor}`);
         }
 
@@ -715,16 +715,21 @@ class CropFarmingGame {
         const scalingFactorBN = new BN(scalingFactor);
         const weatherMultiplierBN = new BN(weatherMultiplier);
         const yieldBoostMultiplierBN = new BN(yieldBoostMultiplier);
+        const tenThousandBN = new BN(10000);
 
         // Calculate priceAdjustedReward: (baseReward * marketPrice) / scalingFactor
         const priceAdjustedReward = baseRewardBN.mul(marketPriceBN).div(scalingFactorBN);
         console.log(`Price Adjusted Reward: ${priceAdjustedReward.toString()}`);
 
         // Calculate estimatedReward: (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000
-        const estimatedReward = priceAdjustedReward.mul(weatherMultiplierBN).mul(yieldBoostMultiplierBN).div(new BN(10000));
+        const estimatedReward = priceAdjustedReward.mul(weatherMultiplierBN).mul(yieldBoostMultiplierBN).div(tenThousandBN);
         console.log(`Estimated Reward: ${estimatedReward.toString()}`);
         
-        return estimatedReward.toString();
+        // Convert to a more readable format
+        const estimatedRewardEth = this.web3.utils.fromWei(estimatedReward.toString(), 'ether');
+        console.log(`Estimated Reward in Ether: ${estimatedRewardEth}`);
+        
+        return estimatedRewardEth;
     }
 
     async updateCropTypes() {
@@ -805,8 +810,8 @@ class CropFarmingGame {
     formatTokenAmount(amount) {
         if (amount === "N/A") return amount;
         const amountFloat = parseFloat(amount);
-        if (isNaN(amountFloat)) return "0";
-        return amountFloat.toFixed(2);
+        if (isNaN(amountFloat)) return "0.0000";
+        return amountFloat.toFixed(4); // Display up to 4 decimal places
     }
 
     async connectWallet() {
