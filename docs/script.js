@@ -1,3 +1,5 @@
+import UpgradeSystem from './upgrades.js';
+
 class CropFarmingGame {
     constructor() {
         console.log("Initializing CropFarmingGame");
@@ -17,553 +19,553 @@ class CropFarmingGame {
         this.marketPrices = {};
         this.contractAddress = '0x0c952604D3fcEEC8D9108987C5be4b15E6E6Ab3c';
         this.contractABI = [
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "claimReward",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "yieldBoostMultiplier",
-				"type": "uint256"
-			}
-		],
-		"name": "harvestCrops",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_harvestToken",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_bitcoinToken",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_ethereumToken",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_usdcToken",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "OwnableInvalidOwner",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "OwnableUnauthorizedAccount",
-		"type": "error"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "farmer",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "cropType",
-				"type": "uint8"
-			}
-		],
-		"name": "CropPlanted",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "farmer",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "CropsHarvested",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "cropType",
-				"type": "uint8"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "newPrice",
-				"type": "uint256"
-			}
-		],
-		"name": "MarketPriceUpdated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "previousOwner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "OwnershipTransferred",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint8",
-				"name": "_cropType",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint256",
-				"name": "growthSpeedMultiplier",
-				"type": "uint256"
-			}
-		],
-		"name": "plantCrop",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "renounceOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "RewardClaimed",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "stake",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "Staked",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "unstake",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "Unstaked",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint8",
-				"name": "cropType",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint256",
-				"name": "newPrice",
-				"type": "uint256"
-			}
-		],
-		"name": "updateMarketPrice",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "updateWeather",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "enum CryptoFarming.Weather",
-				"name": "newWeather",
-				"type": "uint8"
-			}
-		],
-		"name": "WeatherChanged",
-		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "BASE_MATURITY_DURATION",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "bitcoinToken",
-		"outputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "calculateReward",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint8",
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"name": "cropBaseRewards",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "currentWeather",
-		"outputs": [
-			{
-				"internalType": "enum CryptoFarming.Weather",
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "ethereumToken",
-		"outputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "farms",
-		"outputs": [
-			{
-				"internalType": "uint40",
-				"name": "lastHarvestTime",
-				"type": "uint40"
-			},
-			{
-				"internalType": "uint216",
-				"name": "harvestTokenBalance",
-				"type": "uint216"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getCurrentWeather",
-		"outputs": [
-			{
-				"internalType": "enum CryptoFarming.Weather",
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_farmer",
-				"type": "address"
-			}
-		],
-		"name": "getFarmStatus",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "uint8",
-						"name": "cropType",
-						"type": "uint8"
-					},
-					{
-						"internalType": "uint40",
-						"name": "plantTime",
-						"type": "uint40"
-					},
-					{
-						"internalType": "uint40",
-						"name": "maturityTime",
-						"type": "uint40"
-					},
-					{
-						"internalType": "uint168",
-						"name": "baseReward",
-						"type": "uint168"
-					}
-				],
-				"internalType": "struct CryptoFarming.Crop[]",
-				"name": "",
-				"type": "tuple[]"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint8",
-				"name": "_cropType",
-				"type": "uint8"
-			}
-		],
-		"name": "getPlantingCost",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "pure",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "harvestToken",
-		"outputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "lastWeatherChange",
-		"outputs": [
-			{
-				"internalType": "uint40",
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    }
+                ],
+                "name": "claimReward",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "yieldBoostMultiplier",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "harvestCrops",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_harvestToken",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_bitcoinToken",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_ethereumToken",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_usdcToken",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnableInvalidOwner",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnableUnauthorizedAccount",
+                "type": "error"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "farmer",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint8",
+                        "name": "cropType",
+                        "type": "uint8"
+                    }
+                ],
+                "name": "CropPlanted",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "farmer",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "CropsHarvested",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "internalType": "uint8",
+                        "name": "cropType",
+                        "type": "uint8"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "newPrice",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "MarketPriceUpdated",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "previousOwner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "newOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnershipTransferred",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint8",
+                        "name": "_cropType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "growthSpeedMultiplier",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "plantCrop",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "renounceOwnership",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "RewardClaimed",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "stake",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Staked",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "newOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "transferOwnership",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "unstake",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Unstaked",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint8",
+                        "name": "cropType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "newPrice",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "updateMarketPrice",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "updateWeather",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "internalType": "enum CryptoFarming.Weather",
+                        "name": "newWeather",
+                        "type": "uint8"
+                    }
+                ],
+                "name": "WeatherChanged",
+                "type": "event"
+            },
+            {
+                "inputs": [],
+                "name": "BASE_MATURITY_DURATION",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "bitcoinToken",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    }
+                ],
+                "name": "calculateReward",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint8",
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "name": "cropBaseRewards",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "currentWeather",
+                "outputs": [
+                    {
+                        "internalType": "enum CryptoFarming.Weather",
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "ethereumToken",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "farms",
+                "outputs": [
+                    {
+                        "internalType": "uint40",
+                        "name": "lastHarvestTime",
+                        "type": "uint40"
+                    },
+                    {
+                        "internalType": "uint216",
+                        "name": "harvestTokenBalance",
+                        "type": "uint216"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getCurrentWeather",
+                "outputs": [
+                    {
+                        "internalType": "enum CryptoFarming.Weather",
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_farmer",
+                        "type": "address"
+                    }
+                ],
+                "name": "getFarmStatus",
+                "outputs": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint8",
+                                "name": "cropType",
+                                "type": "uint8"
+                            },
+                            {
+                                "internalType": "uint40",
+                                "name": "plantTime",
+                                "type": "uint40"
+                            },
+                            {
+                                "internalType": "uint40",
+                                "name": "maturityTime",
+                                "type": "uint40"
+                            },
+                            {
+                                "internalType": "uint168",
+                                "name": "baseReward",
+                                "type": "uint168"
+                            }
+                        ],
+                        "internalType": "struct CryptoFarming.Crop[]",
+                        "name": "",
+                        "type": "tuple[]"
+                    },
+                    {
+                        "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "_cropType",
+                "type": "uint8"
+            }
+        ],
+        "name": "getPlantingCost",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "pure",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "harvestToken",
+        "outputs": [
+            {
+                "internalType": "contract IERC20",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "lastWeatherChange",
+        "outputs": [
+            {
+                "internalType": "uint40",
                 "name": "",
                 "type": "uint40"
             }
@@ -828,6 +830,7 @@ class CropFarmingGame {
         if (this.contract && this.accounts) {
             try {
                 const weather = await this.contract.methods.getCurrentWeather().call();
+                console.log("Weather data received:", weather);
                 this.currentWeather = parseInt(weather);
                 this.updateWeatherUI();
                 await this.updateCropTypes();
@@ -835,6 +838,7 @@ class CropFarmingGame {
                 console.error("Error updating weather:", error);
             }
         } else {
+            console.log("Contract or accounts not available, using fallback weather");
             this.currentWeather = Math.floor(Math.random() * 4);
             this.updateWeatherUI();
             await this.updateCropTypes();
@@ -1013,6 +1017,7 @@ class CropFarmingGame {
             for (const crop of this.cropTypes) {
                 try {
                     const newPrice = await this.contract.methods.getMarketPrice(crop.name).call();
+                    console.log(`Market price for ${crop.name}:`, newPrice);
                     this.marketPrices[crop.name].currentPrice = parseInt(newPrice);
                     this.marketPrices[crop.name].trend = newPrice > this.marketPrices[crop.name].currentPrice ? 'up' : 'down';
                 } catch (error) {
@@ -1020,7 +1025,7 @@ class CropFarmingGame {
                 }
             }
         } else {
-            // Fallback to local price updates if not connected to the contract
+            console.log("Contract or accounts not available, using fallback market prices");
             this.cropTypes.forEach(crop => {
                 const changePercent = Math.random() * 0.2;
                 const changeAmount = crop.baseReward * changePercent;
@@ -1035,6 +1040,7 @@ class CropFarmingGame {
                 }
 
                 market.currentPrice = Math.max(crop.baseReward * 0.5, Math.min(crop.baseReward * 1.5, market.currentPrice));
+                console.log(`Fallback market price for ${crop.name}:`, market.currentPrice);
             });
         }
 
@@ -1130,6 +1136,7 @@ class CropFarmingGame {
             option.textContent = `${crop.name} (Cost: ${crop.basePlantCost} tokens, Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens)`;
             cropSelect.appendChild(option);
         }
+        console.log("Crop select options updated:", cropSelect.innerHTML);
     }
 
     async updateCropList() {
@@ -1231,3 +1238,23 @@ console.log("Game initialized");
 
 // Start market fluctuations
 game.startMarketFluctuations();
+
+// Add event listener for DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded and parsed');
+    const connectWalletBtn = document.getElementById('connect-wallet-btn');
+    if (connectWalletBtn) {
+        connectWalletBtn.addEventListener('click', () => {
+            console.log('Connect wallet button clicked');
+            if (typeof window.ethereum !== 'undefined') {
+                console.log('MetaMask is installed!');
+                game.connectWallet();
+            } else {
+                console.log('MetaMask is not installed');
+                alert('Please install MetaMask to use this dApp!');
+            }
+        });
+    } else {
+        console.error('Connect wallet button not found');
+    }
+});
