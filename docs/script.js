@@ -1,133 +1,95 @@
-class UpgradeSystem {
-    constructor(game) {
-        this.game = game;
-        this.upgrades = {
-            growthSpeed: {
-                name: "Growth Accelerator",
-                levels: [
-                    { cost: 100, effect: 100 },
-                    { cost: 250, effect: 90 },
-                    { cost: 500, effect: 80 },
-                    { cost: 1000, effect: 70 },
-                    { cost: 2000, effect: 60 }
-                ],
-                description: "Reduces crop growth time",
-                currentLevel: 0
-            },
-            yieldBoost: {
-                name: "Yield Enhancer",
-                levels: [
-                    { cost: 100, effect: 100 },
-                    { cost: 250, effect: 110 },
-                    { cost: 500, effect: 120 },
-                    { cost: 1000, effect: 130 },
-                    { cost: 2000, effect: 140 }
-                ],
-                description: "Increases harvest yield",
-                currentLevel: 0
-            }
-        };
-        this.initializeUpgradeUI();
-    }
-
-    initializeUpgradeUI() {
-        const upgradeContainer = document.getElementById('upgrade-container');
-        if (!upgradeContainer) {
-            console.error("Upgrade container not found");
-            return;
-        }
-
-        Object.entries(this.upgrades).forEach(([key, upgrade]) => {
-            const upgradeElement = document.createElement('div');
-            upgradeElement.className = 'upgrade-item';
-            upgradeElement.innerHTML = `
-                <h3>${upgrade.name}</h3>
-                <p>${upgrade.description}</p>
-                <p>Current Level: <span id="${key}-level">0</span></p>
-                <p>Next Upgrade Cost: <span id="${key}-cost">${upgrade.levels[0].cost}</span> tokens</p>
-                <button id="${key}-upgrade-btn">Upgrade</button>
-            `;
-            upgradeContainer.appendChild(upgradeElement);
-
-            document.getElementById(`${key}-upgrade-btn`).addEventListener('click', () => this.purchaseUpgrade(key));
-        });
-    }
-
-    purchaseUpgrade(upgradeKey) {
-        const upgrade = this.upgrades[upgradeKey];
-        const nextLevel = upgrade.currentLevel + 1;
-
-        if (nextLevel >= upgrade.levels.length) {
-            alert("Max level reached for this upgrade!");
-            return;
-        }
-
-        const cost = upgrade.levels[nextLevel].cost;
-
-        if (this.game.balance < cost) {
-            alert("Not enough tokens to purchase this upgrade!");
-            return;
-        }
-
-        this.game.balance -= cost;
-        upgrade.currentLevel = nextLevel;
-
-        this.updateUpgradeUI(upgradeKey);
-        this.game.updateWalletUI();
-
-        alert(`${upgrade.name} upgraded to level ${nextLevel}!`);
-    }
-
-    updateUpgradeUI(upgradeKey) {
-        const upgrade = this.upgrades[upgradeKey];
-        const levelElement = document.getElementById(`${upgradeKey}-level`);
-        const costElement = document.getElementById(`${upgradeKey}-cost`);
-        if (levelElement && costElement) {
-            levelElement.textContent = upgrade.currentLevel;
-            const nextLevel = upgrade.currentLevel + 1;
-            if (nextLevel < upgrade.levels.length) {
-                costElement.textContent = upgrade.levels[nextLevel].cost;
-            } else {
-                costElement.textContent = "MAX";
-                document.getElementById(`${upgradeKey}-upgrade-btn`).disabled = true;
-            }
-        }
-    }
-
-    getGrowthSpeedMultiplier() {
-        return this.upgrades.growthSpeed.levels[this.upgrades.growthSpeed.currentLevel].effect;
-    }
-
-    getYieldBoostMultiplier() {
-        return this.upgrades.yieldBoost.levels[this.upgrades.yieldBoost.currentLevel].effect;
-    }
-}
-
 class CropFarmingGame {
     constructor() {
         console.log("Initializing CropFarmingGame");
         this.playerID = 'Not Connected';
-        this.balance = 0;
+        this.harvestBalance = 0;
         this.crops = [];
         this.cropIcons = {
             'Bitcoin': '🪙',
             'Ethereum': '💎',
             'Dogecoin': '🐶'
-	    
         };
         this.cropTypes = [
             { name: "Bitcoin", baseGrowthTime: 300, baseReward: 50, basePlantCost: 10 },
             { name: "Ethereum", baseGrowthTime: 180, baseReward: 30, basePlantCost: 5 },
             { name: "Dogecoin", baseGrowthTime: 60, baseReward: 10, basePlantCost: 1 },
-		
         ];
         this.marketPrices = {};
-        this.contractAddress = '0xEB7F27A122E1d42f73d038C9eeA3796cCC1c9A46';
+        this.contractAddress = '0x0c952604D3fcEEC8D9108987C5be4b15E6E6Ab3c';
         this.contractABI = [
 	{
-		"inputs": [],
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			}
+		],
+		"name": "claimReward",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "yieldBoostMultiplier",
+				"type": "uint256"
+			}
+		],
+		"name": "harvestCrops",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_harvestToken",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_bitcoinToken",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_ethereumToken",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_usdcToken",
+				"type": "address"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "OwnableInvalidOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "OwnableUnauthorizedAccount",
+		"type": "error"
 	},
 	{
 		"anonymous": false,
@@ -140,9 +102,9 @@ class CropFarmingGame {
 			},
 			{
 				"indexed": false,
-				"internalType": "string",
+				"internalType": "uint8",
 				"name": "cropType",
-				"type": "string"
+				"type": "uint8"
 			}
 		],
 		"name": "CropPlanted",
@@ -168,44 +130,13 @@ class CropFarmingGame {
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "yieldBoostMultiplier",
-				"type": "uint256"
-			}
-		],
-		"name": "harvestCrops",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_index",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "yieldBoostMultiplier",
-				"type": "uint256"
-			}
-		],
-		"name": "harvestSingleCrop",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
 				"indexed": false,
-				"internalType": "string",
+				"internalType": "uint8",
 				"name": "cropType",
-				"type": "string"
+				"type": "uint8"
 			},
 			{
 				"indexed": false,
@@ -218,11 +149,30 @@ class CropFarmingGame {
 		"type": "event"
 	},
 	{
+		"anonymous": false,
 		"inputs": [
 			{
-				"internalType": "string",
+				"indexed": true,
+				"internalType": "address",
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint8",
 				"name": "_cropType",
-				"type": "string"
+				"type": "uint8"
 			},
 			{
 				"internalType": "uint256",
@@ -234,6 +184,75 @@ class CropFarmingGame {
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "RewardClaimed",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "stake",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "Staked",
+		"type": "event"
 	},
 	{
 		"inputs": [
@@ -251,9 +270,52 @@ class CropFarmingGame {
 	{
 		"inputs": [
 			{
-				"internalType": "string",
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "unstake",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "Unstaked",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint8",
 				"name": "cropType",
-				"type": "string"
+				"type": "uint8"
 			},
 			{
 				"internalType": "uint256",
@@ -300,11 +362,48 @@ class CropFarmingGame {
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "bitcoinToken",
+		"outputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
-				"internalType": "string",
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			}
+		],
+		"name": "calculateReward",
+		"outputs": [
+			{
+				"internalType": "uint256",
 				"name": "",
-				"type": "string"
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
 			}
 		],
 		"name": "cropBaseRewards",
@@ -332,6 +431,19 @@ class CropFarmingGame {
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "ethereumToken",
+		"outputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -342,14 +454,14 @@ class CropFarmingGame {
 		"name": "farms",
 		"outputs": [
 			{
-				"internalType": "uint256",
+				"internalType": "uint40",
 				"name": "lastHarvestTime",
-				"type": "uint256"
+				"type": "uint40"
 			},
 			{
-				"internalType": "uint256",
-				"name": "tokenBalance",
-				"type": "uint256"
+				"internalType": "uint216",
+				"name": "harvestTokenBalance",
+				"type": "uint216"
 			}
 		],
 		"stateMutability": "view",
@@ -381,24 +493,24 @@ class CropFarmingGame {
 			{
 				"components": [
 					{
-						"internalType": "string",
+						"internalType": "uint8",
 						"name": "cropType",
-						"type": "string"
+						"type": "uint8"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint40",
 						"name": "plantTime",
-						"type": "uint256"
+						"type": "uint40"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint40",
 						"name": "maturityTime",
-						"type": "uint256"
+						"type": "uint40"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "uint168",
 						"name": "baseReward",
-						"type": "uint256"
+						"type": "uint168"
 					}
 				],
 				"internalType": "struct CryptoFarming.Crop[]",
@@ -417,12 +529,12 @@ class CropFarmingGame {
 	{
 		"inputs": [
 			{
-				"internalType": "string",
-				"name": "cropType",
-				"type": "string"
+				"internalType": "uint8",
+				"name": "_cropType",
+				"type": "uint8"
 			}
 		],
-		"name": "getMarketPrice",
+		"name": "getPlantingCost",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -430,23 +542,17 @@ class CropFarmingGame {
 				"type": "uint256"
 			}
 		],
-		"stateMutability": "view",
+		"stateMutability": "pure",
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_farmer",
-				"type": "address"
-			}
-		],
-		"name": "getTokenBalance",
+		"inputs": [],
+		"name": "harvestToken",
 		"outputs": [
 			{
-				"internalType": "uint256",
+				"internalType": "contract IERC20",
 				"name": "",
-				"type": "uint256"
+				"type": "address"
 			}
 		],
 		"stateMutability": "view",
@@ -457,73 +563,155 @@ class CropFarmingGame {
 		"name": "lastWeatherChange",
 		"outputs": [
 			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "MARKET_UPDATE_INTERVAL",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "marketPrices",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "SCALING_FACTOR",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "WEATHER_DURATION",
-		"outputs": [
-			{
-				"internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
+				"internalType": "uint40",
+                "name": "",
+                "type": "uint40"
             }
-        ];
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "name": "marketPrices",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "REWARD_RATE",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "SCALING_FACTOR",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "stakes",
+        "outputs": [
+            {
+                "internalType": "uint248",
+                "name": "amount",
+                "type": "uint248"
+            },
+            {
+                "internalType": "uint40",
+                "name": "lastRewardTime",
+                "type": "uint40"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "STAKING_FEE",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "TREASURY",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "usdcToken",
+        "outputs": [
+            {
+                "internalType": "contract IERC20",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "WEATHER_DURATION",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+];
+        this.harvestTokenAddress = '0x051565d89b0490d4d87378F3Fe5Ca95D5aD18067';
         this.marketUpdateInterval = 300000; // 5 minutes in milliseconds
         this.marketCountdown = 300;
         this.lastMarketUpdate = Date.now();
@@ -544,263 +732,6 @@ class CropFarmingGame {
         this.initializeUI();
         this.startMarketFluctuations();
         console.log("CropFarmingGame initialized");
-    }
-
-    initializeUI() {
-        console.log("Initializing UI");
-        const connectWalletBtn = document.getElementById('connect-wallet-btn');
-        if (connectWalletBtn) {
-            connectWalletBtn.addEventListener('click', () => this.connectWallet());
-        } else {
-            console.error("Connect wallet button not found");
-        }
-        const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
-        if (disconnectWalletBtn) {
-            disconnectWalletBtn.addEventListener('click', () => this.disconnectWallet());
-        } else {
-            console.error("Disconnect wallet button not found");
-        }
-        const plantBtn = document.getElementById('plant-btn');
-        if (plantBtn) {
-            plantBtn.addEventListener('click', () => this.plantCrop());
-        } else {
-            console.error("Plant button not found");
-        }
-        const harvestBtn = document.getElementById('harvest-btn');
-        if (harvestBtn) {
-            harvestBtn.addEventListener('click', () => this.harvestCrops());
-        } else {
-            console.error("Harvest button not found");
-        }
-        this.updateCropTypes();
-        this.updateMarketUI();
-        this.updateWeatherUI();
-        console.log("UI initialized");
-    }
-
-    initializeMarketPrices() {
-        console.log("Initializing market prices");
-        this.cropTypes.forEach(crop => {
-            this.marketPrices[crop.name] = {
-                currentPrice: crop.baseReward,
-                trend: Math.random() > 0.5 ? 'up' : 'down'
-            };
-        });
-        console.log("Market prices initialized:", this.marketPrices);
-    }
-
-    startMarketFluctuations() {
-        console.log("Starting market fluctuations");
-        this.updateMarketPrices();
-        this.updateMarketCountdown();
-
-        setInterval(() => {
-            const now = Date.now();
-            const elapsedTime = now - this.lastMarketUpdate;
-
-            if (elapsedTime >= this.marketUpdateInterval) {
-                this.updateMarketPrices();
-                this.marketCountdown = 300;
-                this.lastMarketUpdate = now;
-            } else {
-                this.marketCountdown = Math.max(0, 300 - Math.floor(elapsedTime / 1000));
-            }
-
-            this.updateMarketCountdown();
-        }, 1000);
-    }
-
-    updateMarketCountdown() {
-        const countdownElement = document.getElementById('market-countdown');
-        if (countdownElement) {
-            countdownElement.textContent = `Next update in: ${this.marketCountdown}s`;
-        } else {
-            console.error("Market countdown element not found");
-        }
-    }
-
-    async updateMarketPrices() {
-        console.log("Updating market prices");
-        if (this.contract && this.accounts) {
-            for (const crop of this.cropTypes) {
-                try {
-                    const newPrice = await this.contract.methods.getMarketPrice(crop.name).call();
-                    this.marketPrices[crop.name].currentPrice = parseInt(newPrice);
-                    this.marketPrices[crop.name].trend = newPrice > this.marketPrices[crop.name].currentPrice ? 'up' : 'down';
-                } catch (error) {
-                    console.error(`Failed to update market price for ${crop.name}:`, error);
-                }
-            }
-        } else {
-            // Fallback to local price updates if not connected to the contract
-            this.cropTypes.forEach(crop => {
-                const changePercent = Math.random() * 0.2;
-                const changeAmount = crop.baseReward * changePercent;
-                const market = this.marketPrices[crop.name];
-
-                if (market.trend === 'up') {
-                    market.currentPrice += changeAmount;
-                    if (Math.random() > 0.7) market.trend = 'down';
-                } else {
-                    market.currentPrice -= changeAmount;
-                    if (Math.random() > 0.7) market.trend = 'up';
-                }
-
-                market.currentPrice = Math.max(crop.baseReward * 0.5, Math.min(crop.baseReward * 1.5, market.currentPrice));
-            });
-        }
-
-        this.updateMarketUI();
-        await this.updateCropTypes();
-    }
-
-    updateMarketUI() {
-        console.log("Updating market UI");
-        const marketContainer = document.getElementById('market-prices-scroll');
-        if (!marketContainer) {
-            console.error("Market prices container not found");
-            return;
-        }
-        marketContainer.innerHTML = '';
-        Object.entries(this.marketPrices).forEach(([cropName, market]) => {
-            const priceSpan = document.createElement('span');
-            const trend = market.trend === 'up' ? '📈' : '📉';
-            priceSpan.innerHTML = `${this.cropIcons[cropName]} ${cropName}: ${market.currentPrice.toFixed(2)} tokens ${trend}`;
-            marketContainer.appendChild(priceSpan);
-        });
-    }
-
-    async getEstimatedReward(cropType, baseReward) {
-        console.log(`Calculating estimated reward for ${cropType} with base reward ${baseReward}`);
-        const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
-        console.log(`Yield Boost Multiplier: ${yieldBoostMultiplier}`);
-        
-        let marketPrice;
-        try {
-            marketPrice = await this.contract.methods.getMarketPrice(cropType).call();
-            console.log(`Market Price for ${cropType}: ${marketPrice}`);
-        } catch (error) {
-            console.error(`Error getting market price for ${cropType}:`, error);
-            marketPrice = this.marketPrices[cropType].currentPrice;
-            console.log(`Using fallback market price: ${marketPrice}`);
-        }
-
-        let weather;
-        try {
-            weather = await this.contract.methods.getCurrentWeather().call();
-            console.log(`Current Weather: ${weather}`);
-        } catch (error) {
-            console.error("Error getting current weather:", error);
-            weather = this.currentWeather;
-            console.log(`Using fallback weather: ${weather}`);
-        }
-        
-        let weatherMultiplier = 100;
-        if (weather == 1) weatherMultiplier = 120; // Rainy
-        if (weather == 3) weatherMultiplier = 80; // CryptoWinter
-        console.log(`Weather Multiplier: ${weatherMultiplier}`);
-
-        let scalingFactor;
-        try {
-            scalingFactor = await this.contract.methods.SCALING_FACTOR().call();
-            console.log(`Scaling Factor: ${scalingFactor}`);
-        } catch (error) {
-            console.error("Error getting SCALING_FACTOR:", error);
-            scalingFactor = '1000000000000000'; // Fallback value, adjust if needed
-            console.log(`Using fallback Scaling Factor: ${scalingFactor}`);
-        }
-
-        // Use regular JavaScript numbers for calculations
-        const priceAdjustedReward = (baseReward * Number(marketPrice)) / Number(scalingFactor);
-        console.log(`Price Adjusted Reward: ${priceAdjustedReward}`);
-
-        const estimatedReward = (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
-        console.log(`Estimated Reward: ${estimatedReward}`);
-        
-        return estimatedReward.toString();
-    }
-
-    async updateCropTypes() {
-        console.log("Updating crop types");
-        const cropSelect = document.getElementById('crop-select');
-        if (!cropSelect) {
-            console.error("Crop select element not found");
-            return;
-        }
-        cropSelect.innerHTML = '';
-        for (const crop of this.cropTypes) {
-            const option = document.createElement('option');
-            option.value = crop.name;
-            let estimatedReward;
-            try {
-                estimatedReward = await this.getEstimatedReward(crop.name, crop.baseReward);
-                console.log(`Estimated reward for ${crop.name}: ${estimatedReward}`);
-            } catch (error) {
-                console.error(`Error calculating estimated reward for ${crop.name}:`, error);
-                estimatedReward = "N/A";
-            }
-            option.textContent = `${crop.name} (Cost: ${crop.basePlantCost} tokens, Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens)`;
-            cropSelect.appendChild(option);
-        }
-    }
-
-    async updateCropList() {
-        console.log("Updating crop list");
-        const cropList = document.getElementById('crop-list');
-        if (!cropList) {
-            console.error("Crop list element not found");
-            return;
-        }
-        cropList.innerHTML = '';
-        if (this.crops.length === 0) {
-            cropList.innerHTML = '<li>No crops planted yet.</li>';
-        } else {
-            for (let index = 0; index < this.crops.length; index++) {
-                const crop = this.crops[index];
-                const li = document.createElement('li');
-                const currentTime = Math.floor(Date.now() / 1000);
-                const timeToMaturity = Math.max(0, parseInt(crop.maturityTime) - currentTime);
-
-                let estimatedReward;
-                try {
-                    estimatedReward = await this.getEstimatedReward(crop.cropType, crop.baseReward);
-                    console.log(`Estimated reward for ${crop.cropType}: ${estimatedReward}`);
-                } catch (error) {
-                    console.error(`Error calculating estimated reward for ${crop.cropType}:`, error);
-                    estimatedReward = "N/A";
-                }
-
-                if (timeToMaturity > 0) {
-                    li.innerHTML = `
-                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
-                        <span>Matures in ${this.formatTime(timeToMaturity)}</span>
-                        <span>Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens</span>
-                    `;
-                } else {
-                    li.innerHTML = `
-                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
-                        <button class="harvest-single-btn" data-index="${index}">Harvest (Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens)</button>
-                    `;
-                    li.style.backgroundColor = '#c8e6c9';
-                }
-                cropList.appendChild(li);
-            }
-
-            document.querySelectorAll('.harvest-single-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const index = event.target.getAttribute('data-index');
-                    this.harvestSingleCrop(index);
-                });
-            });
-        }
-    }
-
-    formatTokenAmount(amount) {
-        if (amount === "N/A") return amount;
-        const amountFloat = parseFloat(amount);
-        if (isNaN(amountFloat)) return "0.0000";
-        if (amountFloat < 0.0001) return "<0.0001";
-        return amountFloat.toFixed(4); // Display up to 4 decimal places
     }
 
     async connectWallet() {
@@ -1033,6 +964,263 @@ class CropFarmingGame {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         return `${minutes}m ${remainingSeconds}s`;
+    }
+
+    initializeMarketPrices() {
+        console.log("Initializing market prices");
+        this.cropTypes.forEach(crop => {
+            this.marketPrices[crop.name] = {
+                currentPrice: crop.baseReward,
+                trend: Math.random() > 0.5 ? 'up' : 'down'
+            };
+        });
+        console.log("Market prices initialized:", this.marketPrices);
+    }
+
+    startMarketFluctuations() {
+        console.log("Starting market fluctuations");
+        this.updateMarketPrices();
+        this.updateMarketCountdown();
+
+        setInterval(() => {
+            const now = Date.now();
+            const elapsedTime = now - this.lastMarketUpdate;
+
+            if (elapsedTime >= this.marketUpdateInterval) {
+                this.updateMarketPrices();
+                this.marketCountdown = 300;
+                this.lastMarketUpdate = now;
+            } else {
+                this.marketCountdown = Math.max(0, 300 - Math.floor(elapsedTime / 1000));
+            }
+
+            this.updateMarketCountdown();
+        }, 1000);
+    }
+
+    updateMarketCountdown() {
+        const countdownElement = document.getElementById('market-countdown');
+        if (countdownElement) {
+            countdownElement.textContent = `Next update in: ${this.marketCountdown}s`;
+        } else {
+            console.error("Market countdown element not found");
+        }
+    }
+
+    async updateMarketPrices() {
+        console.log("Updating market prices");
+        if (this.contract && this.accounts) {
+            for (const crop of this.cropTypes) {
+                try {
+                    const newPrice = await this.contract.methods.getMarketPrice(crop.name).call();
+                    this.marketPrices[crop.name].currentPrice = parseInt(newPrice);
+                    this.marketPrices[crop.name].trend = newPrice > this.marketPrices[crop.name].currentPrice ? 'up' : 'down';
+                } catch (error) {
+                    console.error(`Failed to update market price for ${crop.name}:`, error);
+                }
+            }
+        } else {
+            // Fallback to local price updates if not connected to the contract
+            this.cropTypes.forEach(crop => {
+                const changePercent = Math.random() * 0.2;
+                const changeAmount = crop.baseReward * changePercent;
+                const market = this.marketPrices[crop.name];
+
+                if (market.trend === 'up') {
+                    market.currentPrice += changeAmount;
+                    if (Math.random() > 0.7) market.trend = 'down';
+                } else {
+                    market.currentPrice -= changeAmount;
+                    if (Math.random() > 0.7) market.trend = 'up';
+                }
+
+                market.currentPrice = Math.max(crop.baseReward * 0.5, Math.min(crop.baseReward * 1.5, market.currentPrice));
+            });
+        }
+
+        this.updateMarketUI();
+        await this.updateCropTypes();
+    }
+
+    updateMarketUI() {
+        console.log("Updating market UI");
+        const marketContainer = document.getElementById('market-prices-scroll');
+        if (!marketContainer) {
+            console.error("Market prices container not found");
+            return;
+        }
+        marketContainer.innerHTML = '';
+        Object.entries(this.marketPrices).forEach(([cropName, market]) => {
+            const priceSpan = document.createElement('span');
+            const trend = market.trend === 'up' ? '📈' : '📉';
+            priceSpan.innerHTML = `${this.cropIcons[cropName]} ${cropName}: ${market.currentPrice.toFixed(2)} tokens ${trend}`;
+            marketContainer.appendChild(priceSpan);
+        });
+    }
+
+    async getEstimatedReward(cropType, baseReward) {
+        console.log(`Calculating estimated reward for ${cropType} with base reward ${baseReward}`);
+        const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
+        console.log(`Yield Boost Multiplier: ${yieldBoostMultiplier}`);
+        
+        let marketPrice;
+        try {
+            marketPrice = await this.contract.methods.getMarketPrice(cropType).call();
+            console.log(`Market Price for ${cropType}: ${marketPrice}`);
+        } catch (error) {
+            console.error(`Error getting market price for ${cropType}:`, error);
+            marketPrice = this.marketPrices[cropType].currentPrice;
+            console.log(`Using fallback market price: ${marketPrice}`);
+        }
+
+        let weather;
+        try {
+            weather = await this.contract.methods.getCurrentWeather().call();
+            console.log(`Current Weather: ${weather}`);
+        } catch (error) {
+            console.error("Error getting current weather:", error);
+            weather = this.currentWeather;
+            console.log(`Using fallback weather: ${weather}`);
+        }
+        
+        let weatherMultiplier = 100;
+        if (weather == 1) weatherMultiplier = 120; // Rainy
+        if (weather == 3) weatherMultiplier = 80; // CryptoWinter
+        console.log(`Weather Multiplier: ${weatherMultiplier}`);
+
+        let scalingFactor;
+        try {
+            scalingFactor = await this.contract.methods.SCALING_FACTOR().call();
+            console.log(`Scaling Factor: ${scalingFactor}`);
+        } catch (error) {
+            console.error("Error getting SCALING_FACTOR:", error);
+            scalingFactor = '1000000000000000'; // Fallback value, adjust if needed
+            console.log(`Using fallback Scaling Factor: ${scalingFactor}`);
+        }
+
+        // Use regular JavaScript numbers for calculations
+        const priceAdjustedReward = (baseReward * Number(marketPrice)) / Number(scalingFactor);
+        console.log(`Price Adjusted Reward: ${priceAdjustedReward}`);
+
+        const estimatedReward = (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
+        console.log(`Estimated Reward: ${estimatedReward}`);
+        
+        return estimatedReward.toString();
+    }
+
+    async updateCropTypes() {
+        console.log("Updating crop types");
+        const cropSelect = document.getElementById('crop-select');
+        if (!cropSelect) {
+            console.error("Crop select element not found");
+            return;
+        }
+        cropSelect.innerHTML = '';
+        for (const crop of this.cropTypes) {
+            const option = document.createElement('option');
+            option.value = crop.name;
+            let estimatedReward;
+            try {
+                estimatedReward = await this.getEstimatedReward(crop.name, crop.baseReward);
+                console.log(`Estimated reward for ${crop.name}: ${estimatedReward}`);
+            } catch (error) {
+                console.error(`Error calculating estimated reward for ${crop.name}:`, error);
+                estimatedReward = "N/A";
+            }
+            option.textContent = `${crop.name} (Cost: ${crop.basePlantCost} tokens, Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens)`;
+            cropSelect.appendChild(option);
+        }
+    }
+
+    async updateCropList() {
+        console.log("Updating crop list");
+        const cropList = document.getElementById('crop-list');
+        if (!cropList) {
+            console.error("Crop list element not found");
+            return;
+        }
+        cropList.innerHTML = '';
+        if (this.crops.length === 0) {
+            cropList.innerHTML = '<li>No crops planted yet.</li>';
+        } else {
+            for (let index = 0; index < this.crops.length; index++) {
+                const crop = this.crops[index];
+                const li = document.createElement('li');
+                const currentTime = Math.floor(Date.now() / 1000);
+                const timeToMaturity = Math.max(0, parseInt(crop.maturityTime) - currentTime);
+
+                let estimatedReward;
+                try {
+                    estimatedReward = await this.getEstimatedReward(crop.cropType, crop.baseReward);
+                    console.log(`Estimated reward for ${crop.cropType}: ${estimatedReward}`);
+                } catch (error) {
+                    console.error(`Error calculating estimated reward for ${crop.cropType}:`, error);
+                    estimatedReward = "N/A";
+                }
+
+                if (timeToMaturity > 0) {
+                    li.innerHTML = `
+                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
+                        <span>Matures in ${this.formatTime(timeToMaturity)}</span>
+                        <span>Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens</span>
+                    `;
+                } else {
+                    li.innerHTML = `
+                        <span><span class="crop-icon">${this.cropIcons[crop.cropType]}</span>${crop.cropType}</span>
+                        <button class="harvest-single-btn" data-index="${index}">Harvest (Estimated Value: ${this.formatTokenAmount(estimatedReward)} tokens)</button>
+                    `;
+                    li.style.backgroundColor = '#c8e6c9';
+                }
+                cropList.appendChild(li);
+            }
+
+            document.querySelectorAll('.harvest-single-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const index = event.target.getAttribute('data-index');
+                    this.harvestSingleCrop(index);
+                });
+            });
+        }
+    }
+
+    formatTokenAmount(amount) {
+        if (amount === "N/A") return amount;
+        const amountFloat = parseFloat(amount);
+        if (isNaN(amountFloat)) return "0.0000";
+        if (amountFloat < 0.0001) return "<0.0001";
+        return amountFloat.toFixed(4); // Display up to 4 decimal places
+    }
+
+    initializeUI() {
+        console.log("Initializing UI");
+        const connectWalletBtn = document.getElementById('connect-wallet-btn');
+        if (connectWalletBtn) {
+            connectWalletBtn.addEventListener('click', () => this.connectWallet());
+        } else {
+            console.error("Connect wallet button not found");
+        }
+        const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
+        if (disconnectWalletBtn) {
+            disconnectWalletBtn.addEventListener('click', () => this.disconnectWallet());
+        } else {
+            console.error("Disconnect wallet button not found");
+        }
+        const plantBtn = document.getElementById('plant-btn');
+        if (plantBtn) {
+            plantBtn.addEventListener('click', () => this.plantCrop());
+        } else {
+            console.error("Plant button not found");
+        }
+        const harvestBtn = document.getElementById('harvest-btn');
+        if (harvestBtn) {
+            harvestBtn.addEventListener('click', () => this.harvestCrops());
+        } else {
+            console.error("Harvest button not found");
+        }
+        this.updateCropTypes();
+        this.updateMarketUI();
+        this.updateWeatherUI();
+        console.log("UI initialized");
     }
 }
 
