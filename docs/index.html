@@ -7,6 +7,49 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         /* Your existing styles here */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        #game-container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e9e9e9;
+            border-radius: 5px;
+        }
+        #player-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -28,8 +71,6 @@
         <main role="main">
             <div class="info-container">
                 <div id="weather-container" class="section">
-                    <h3>Current Weather: <span id="current-weather-icon"></span></h3>
-                    <p id="weather-effect"></p>
                 </div>
 
                 <div id="market-prices" class="section">
@@ -57,40 +98,6 @@
 
             <div id="farm-status" class="section">
                 <h2>Your Farm</h2>
-                <ul id="crop-list"></ul>
-            </div>
-
-            <div id="staking" class="section">
-                <h2>Staking</h2>
-                <div class="staking-controls">
-                    <select id="stake-token">
-                        <option value="HARV">HARV</option>
-                        <option value="BTC">BTC</option>
-                        <option value="ETH">ETH</option>
-                        <option value="USDC">USDC</option>
-                    </select>
-                    <input type="number" id="stake-amount" placeholder="Amount to stake">
-                    <button id="stake-btn">Stake</button>
-                </div>
-                <div class="unstaking-controls">
-                    <select id="unstake-token">
-                        <option value="HARV">HARV</option>
-                        <option value="BTC">BTC</option>
-                        <option value="ETH">ETH</option>
-                        <option value="USDC">USDC</option>
-                    </select>
-                    <input type="number" id="unstake-amount" placeholder="Amount to unstake">
-                    <button id="unstake-btn">Unstake</button>
-                </div>
-                <div class="claim-rewards-controls">
-                    <select id="claim-token">
-                        <option value="HARV">HARV</option>
-                        <option value="BTC">BTC</option>
-                        <option value="ETH">ETH</option>
-                        <option value="USDC">USDC</option>
-                    </select>
-                    <button id="claim-reward-btn">Claim Reward</button>
-                </div>
             </div>
 
             <div id="upgrades" class="section">
