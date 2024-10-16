@@ -256,21 +256,12 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-
-        #token-balances {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-
-        #token-balances p {
-            margin: 0.5rem 0;
-        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <header>
-            <h1><i class="fas fa-seedling"></i> Build-A-Farm</h1>
+            <h1><i class="fas fa-seedling"></i> Crypto Farming Simulator</h1>
             <div id="player-info">
                 <span id="player-id"><button id="connect-wallet-btn">Connect Wallet</button></span>
                 <span id="player-balance"><i class="fas fa-coins"></i> 0 tokens</span>
@@ -293,21 +284,12 @@
             <section id="token-actions">
                 <h2><i class="fas fa-coins"></i> Token Actions</h2>
                 <div class="token-action-controls">
-                    <select id="token-select">
-                        <option value="harvestToken">Harvest Token</option>
-                        <option value="bitcoinToken">Bitcoin</option>
-                        <option value="ethereumToken">Ethereum</option>
-                        <option value="usdcToken">USDC</option>
-                    </select>
                     <input type="number" id="token-amount" placeholder="Amount" min="0" step="0.01">
                     <button id="stake-btn">Stake</button>
                     <button id="unstake-btn">Unstake</button>
                 </div>
                 <div id="token-balances">
                     <p>Harvest Token Balance: <span id="harvest-token-balance">0</span></p>
-                    <p>Bitcoin Balance: <span id="bitcoin-balance">0</span></p>
-                    <p>Ethereum Balance: <span id="ethereum-balance">0</span></p>
-                    <p>USDC Balance: <span id="usdc-balance">0</span></p>
                 </div>
             </section>
             <section id="farm-actions">
