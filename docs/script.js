@@ -20,19 +20,6 @@ class CropFarmingGame {
         this.contractAddress = '0x5A5959A318FbD06e536A91f37874f0920232439D';
         this.contractABI = [
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "claimRewards",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
@@ -98,19 +85,6 @@ class CropFarmingGame {
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "yieldBoostMultiplier",
-				"type": "uint256"
-			}
-		],
-		"name": "harvestCrops",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -149,31 +123,6 @@ class CropFarmingGame {
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "uint8",
-				"name": "_cropType",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint256",
-				"name": "growthSpeedMultiplier",
-				"type": "uint256"
-			}
-		],
-		"name": "plantCrop",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "renounceOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -210,76 +159,6 @@ class CropFarmingGame {
 		],
 		"name": "RewardRateUpdated",
 		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_bitcoinToken",
-				"type": "address"
-			}
-		],
-		"name": "setBitcoinTokenAddress",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_ethereumToken",
-				"type": "address"
-			}
-		],
-		"name": "setEthereumTokenAddress",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_harvestToken",
-				"type": "address"
-			}
-		],
-		"name": "setHarvestTokenAddress",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_usdcToken",
-				"type": "address"
-			}
-		],
-		"name": "setUsdcTokenAddress",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "stake",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
 	},
 	{
 		"anonymous": false,
@@ -326,37 +205,6 @@ class CropFarmingGame {
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "unstake",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -382,44 +230,6 @@ class CropFarmingGame {
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "uint8",
-				"name": "cropType",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint256",
-				"name": "newPrice",
-				"type": "uint256"
-			}
-		],
-		"name": "updateMarketPrice",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "newRate",
-				"type": "uint256"
-			}
-		],
-		"name": "updateRewardRate",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "updateWeather",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -431,6 +241,97 @@ class CropFarmingGame {
 		],
 		"name": "WeatherChanged",
 		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "BASE_MATURITY_DURATION",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "REWARD_RATE_PRECISION",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "SCALING_FACTOR",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "SECONDS_PER_DAY",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "STAKING_FEE",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "TREASURY",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "WEATHER_DURATION",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
 	},
 	{
 		"inputs": [
@@ -446,19 +347,6 @@ class CropFarmingGame {
 			}
 		],
 		"name": "accumulatedRewards",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "BASE_MATURITY_DURATION",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -504,6 +392,19 @@ class CropFarmingGame {
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			}
+		],
+		"name": "claimRewards",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -573,108 +474,121 @@ class CropFarmingGame {
 			}
 		],
 		"stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "user",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
-            }
-        ],
-        "name": "getClaimableRewards",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "getCurrentWeather",
-        "outputs": [
-            {
-                "internalType": "enum CryptoFarming.Weather",
-                "name": "",
-                "type": "uint8"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_farmer",
-                "type": "address"
-            }
-        ],
-        "name": "getFarmStatus",
-        "outputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "uint8",
-                        "name": "cropType",
-                        "type": "uint8"
-                    },
-                    {
-                        "internalType": "uint40",
-                        "name": "plantTime",
-                        "type": "uint40"
-                    },
-                    {
-                        "internalType": "uint40",
-                        "name": "maturityTime",
-                        "type": "uint40"
-                    },
-                    {
-                        "internalType": "uint168",
-                        "name": "baseReward",
-                        "type": "uint168"
-                    }
-                ],
-                "internalType": "struct CryptoFarming.Crop[]",
-                "name": "",
-                "type": "tuple[]"
-            },
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint8",
-                "name": "_cropType",
-                "type": "uint8"
-            }
-        ],
-        "name": "getPlantingCost",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			}
+		],
+		"name": "getClaimableRewards",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getCurrentWeather",
+		"outputs": [
+			{
+				"internalType": "enum CryptoFarming.Weather",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_farmer",
+				"type": "address"
+			}
+		],
+		"name": "getFarmStatus",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint8",
+						"name": "cropType",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint40",
+						"name": "plantTime",
+						"type": "uint40"
+					},
+					{
+						"internalType": "uint40",
+						"name": "maturityTime",
+						"type": "uint40"
+					},
+					{
+						"internalType": "uint168",
+						"name": "baseReward",
+						"type": "uint168"
+					}
+				],
+				"internalType": "struct CryptoFarming.Crop[]",
+				"name": "",
+				"type": "tuple[]"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint8",
+				"name": "_cropType",
+				"type": "uint8"
+			}
+		],
+		"name": "getPlantingCost",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "yieldBoostMultiplier",
+				"type": "uint256"
+			}
+		],
+		"name": "harvestCrops",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -736,16 +650,28 @@ class CropFarmingGame {
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "REWARD_RATE_PRECISION",
-        "outputs": [
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "_cropType",
+                "type": "uint8"
+            },
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "growthSpeedMultiplier",
                 "type": "uint256"
             }
         ],
-        "stateMutability": "view",
+        "name": "plantCrop",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -762,29 +688,73 @@ class CropFarmingGame {
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "SCALING_FACTOR",
-        "outputs": [
+        "inputs": [
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
+                "internalType": "address",
+                "name": "_bitcoinToken",
+                "type": "address"
             }
         ],
-        "stateMutability": "view",
+        "name": "setBitcoinTokenAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "SECONDS_PER_DAY",
-        "outputs": [
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_ethereumToken",
+                "type": "address"
+            }
+        ],
+        "name": "setEthereumTokenAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_harvestToken",
+                "type": "address"
+            }
+        ],
+        "name": "setHarvestTokenAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_usdcToken",
+                "type": "address"
+            }
+        ],
+        "name": "setUsdcTokenAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+            },
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "amount",
                 "type": "uint256"
             }
         ],
-        "stateMutability": "view",
+        "name": "stake",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -817,29 +787,72 @@ class CropFarmingGame {
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "STAKING_FEE",
-        "outputs": [
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+            },
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "amount",
                 "type": "uint256"
             }
         ],
-        "stateMutability": "view",
+        "name": "unstake",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "cropType",
+                "type": "uint8"
+            },
+            {
+                "internalType": "uint256",
+                "name": "newPrice",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateMarketPrice",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "newRate",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateRewardRate",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
         "inputs": [],
-        "name": "TREASURY",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
+        "name": "updateWeather",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -850,19 +863,6 @@ class CropFarmingGame {
                 "internalType": "contract IERC20",
                 "name": "",
                 "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "WEATHER_DURATION",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -897,8 +897,39 @@ class CropFarmingGame {
             },
             {
                 "constant": false,
-                "inputs": [{"name": "_spender", "type": "address"}, {"name": "_value", "type": "uint256"}],
+                "inputs": [
+                    {"name": "_spender", "type": "address"},
+                    {"name": "_value", "type": "uint256"}
+                ],
                 "name": "approve",
+                "outputs": [{"name": "", "type": "bool"}],
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {"name": "_to", "type": "address"},
+                    {"name": "_value", "type": "uint256"}
+                ],
+                "name": "transfer",
+                "outputs": [{"name": "", "type": "bool"}],
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {"name": "_from", "type": "address"},
+                    {"name": "_to", "type": "address"},
+                    {"name": "_value", "type": "uint256"}
+                ],
+                "name": "transferFrom",
                 "outputs": [{"name": "", "type": "bool"}],
                 "type": "function"
             }
@@ -1018,6 +1049,12 @@ class CropFarmingGame {
                 harvestTokenBalanceElement.textContent = balanceInEther;
             } else {
                 console.error("Harvest token balance element not found");
+            }
+
+            // Update the balance in the wallet UI as well
+            const playerBalanceSpan = document.getElementById('player-balance');
+            if (playerBalanceSpan) {
+                playerBalanceSpan.innerHTML = `<i class="fas fa-coins"></i> ${balanceInEther} Harvest tokens`;
             }
         } catch (error) {
             console.error("Error fetching Harvest token balance:", error);
@@ -1431,21 +1468,28 @@ class CropFarmingGame {
             const amountInWei = this.web3.utils.toWei(amount.toString(), 'ether');
             const harvestTokenContract = new this.web3.eth.Contract(this.erc20ABI, this.harvestTokenAddress);
             
+            console.log("Approving token transfer...");
             // First, approve the contract to spend tokens
-            await harvestTokenContract.methods.approve(this.contractAddress, amountInWei).send({ from: this.accounts[0] });
-            console.log("Approval successful");
+            const approvalResult = await harvestTokenContract.methods.approve(this.contractAddress, amountInWei).send({ from: this.accounts[0] });
+            console.log("Approval result:", approvalResult);
 
-            // Then, stake the tokens
-            const result = await this.contract.methods.stake(this.harvestTokenAddress, amountInWei).send({ from: this.accounts[0] });
-            
-            if (result.status) {
-                console.log(`${amount} Harvest tokens staked successfully!`);
-                alert(`${amount} Harvest tokens staked successfully! Transaction hash: ${result.transactionHash}`);
-                await this.updateFarmStatus();
-                await this.updateHarvestTokenBalance();
+            if (approvalResult.status) {
+                console.log("Approval successful, now staking...");
+                // Then, stake the tokens
+                const result = await this.contract.methods.stake(this.harvestTokenAddress, amountInWei).send({ from: this.accounts[0] });
+                
+                if (result.status) {
+                    console.log(`${amount} Harvest tokens staked successfully!`);
+                    alert(`${amount} Harvest tokens staked successfully! Transaction hash: ${result.transactionHash}`);
+                    await this.updateFarmStatus();
+                    await this.updateHarvestTokenBalance();
+                } else {
+                    console.error("Failed to stake Harvest tokens");
+                    alert("Failed to stake Harvest tokens. Please try again.");
+                }
             } else {
-                console.error("Failed to stake Harvest tokens");
-                alert("Failed to stake Harvest tokens. Please try again.");
+                console.error("Failed to approve token transfer");
+                alert("Failed to approve token transfer. Please try again.");
             }
         } catch (error) {
             console.error("Error staking Harvest tokens:", error);
