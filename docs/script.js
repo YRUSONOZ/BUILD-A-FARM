@@ -730,6 +730,25 @@ class CropFarmingGame {
         this.weatherCheckInterval = 30;
         this.cropUpdateInterval = null;
         this.upgradeSystem = new UpgradeSystem(this);
+
+        this.erc20ABI = [
+            {
+                "constant": true,
+                "inputs": [{"name": "_owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "balance", "type": "uint256"}],
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [{"name": "_spender", "type": "address"}, {"name": "_value", "type": "uint256"}],
+                "name": "approve",
+                "outputs": [{"name": "", "type": "bool"}],
+                "type": "function"
+            }
+            // Add other necessary ERC20 functions here if needed
+        ];
+
         this.initializeMarketPrices();
         this.initializeUI();
         this.startMarketFluctuations();
@@ -774,6 +793,7 @@ class CropFarmingGame {
                 this.updateWalletUI();
                 await this.updateFarmStatus();
                 this.updateWeather();
+                await this.updateHarvestTokenBalance();
 
                 this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
                 this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
@@ -822,6 +842,30 @@ class CropFarmingGame {
             playerInfo.classList.remove('connected');
             document.getElementById('disconnect-wallet-btn').style.display = 'none';
             document.getElementById('connect-wallet-btn').addEventListener('click', () => this.connectWallet());
+        }
+    }
+
+    async updateHarvestTokenBalance() {
+        if (!this.web3 || !this.accounts) {
+            console.log("Web3 or accounts not available");
+            return;
+        }
+
+        try {
+            const harvestTokenContract = new this.web3.eth.Contract(this.erc20ABI, this.harvestTokenAddress);
+            const balance = await harvestTokenContract.methods.balanceOf(this.accounts[0]).call();
+            const balanceInEther = this.web3.utils.fromWei(balance, 'ether');
+            console.log("Harvest Token Balance:", balanceInEther);
+
+            // Update the UI
+            const harvestTokenBalanceElement = document.getElementById('harvest-token-balance');
+            if (harvestTokenBalanceElement) {
+                harvestTokenBalanceElement.textContent = balanceInEther;
+            } else {
+                console.error("Harvest token balance element not found");
+            }
+        } catch (error) {
+            console.error("Error fetching Harvest token balance:", error);
         }
     }
 
@@ -1205,19 +1249,21 @@ class CropFarmingGame {
             return;
         }
         try {
+            const amountInWei = this.web3.utils.toWei(amount.toString(), 'ether');
             const harvestTokenContract = new this.web3.eth.Contract(this.erc20ABI, this.harvestTokenAddress);
             
             // First, approve the contract to spend tokens
-            await harvestTokenContract.methods.approve(this.contractAddress, amount).send({ from: this.accounts[0] });
+            await harvestTokenContract.methods.approve(this.contractAddress, amountInWei).send({ from: this.accounts[0] });
             console.log("Approval successful");
 
             // Then, stake the tokens
-            const result = await this.contract.methods.stake(this.harvestTokenAddress, amount).send({ from: this.accounts[0] });
+            const result = await this.contract.methods.stake(this.harvestTokenAddress, amountInWei).send({ from: this.accounts[0] });
             
             if (result.status) {
                 console.log(`${amount} Harvest tokens staked successfully!`);
                 alert(`${amount} Harvest tokens staked successfully! Transaction hash: ${result.transactionHash}`);
                 await this.updateFarmStatus();
+                await this.updateHarvestTokenBalance();
             } else {
                 console.error("Failed to stake Harvest tokens");
                 alert("Failed to stake Harvest tokens. Please try again.");
@@ -1266,6 +1312,10 @@ class CropFarmingGame {
         this.updateCropTypes();
         this.updateMarketUI();
         this.updateWeatherUI();
+
+        // Update Harvest token balance every 30 seconds
+        setInterval(() => this.updateHarvestTokenBalance(), 30000);
+
         console.log("UI initialized");
     }
 }
@@ -1296,4 +1346,55 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.error('Connect wallet button not found');
     }
+
+    // Initialize other UI elements
+    const stakeBtn = document.getElementById('stake-btn');
+    if (stakeBtn) {
+        stakeBtn.addEventListener('click', () => {
+            const amount = document.getElementById('token-amount').value;
+            game.stakeHarvestTokens(amount);
+        });
+    } else {
+        console.error('Stake button not found');
+    }
+
+    const unstakeBtn = document.getElementById('unstake-btn');
+    if (unstakeBtn) {
+        unstakeBtn.addEventListener('click', () => {
+            const amount = document.getElementById('token-amount').value;
+            game.unstakeHarvestTokens(amount);
+        });
+    } else {
+        console.error('Unstake button not found');
+    }
 });
+
+// Add the unstakeHarvestTokens method to the CropFarmingGame class
+CropFarmingGame.prototype.unstakeHarvestTokens = async function(amount) {
+    console.log("Attempting to unstake Harvest tokens");
+    if (!this.contract || !this.accounts) {
+        alert("Please connect your wallet first!");
+        return;
+    }
+    try {
+        const amountInWei = this.web3.utils.toWei(amount.toString(), 'ether');
+        
+        const result = await this.contract.methods.unstake(this.harvestTokenAddress, amountInWei).send({ from: this.accounts[0] });
+        
+        if (result.status) {
+            console.log(`${amount} Harvest tokens unstaked successfully!`);
+            alert(`${amount} Harvest tokens unstaked successfully! Transaction hash: ${result.transactionHash}`);
+            await this.updateFarmStatus();
+            await this.updateHarvestTokenBalance();
+        } else {
+            console.error("Failed to unstake Harvest tokens");
+            alert("Failed to unstake Harvest tokens. Please try again.");
+        }
+    } catch (error) {
+        console.error("Error unstaking Harvest tokens:", error);
+        alert(`Failed to unstake Harvest tokens: ${error.message}`);
+    }
+};
+
+// Export the game instance if needed
+export default game;
