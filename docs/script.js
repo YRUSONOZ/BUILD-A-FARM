@@ -6,6 +6,7 @@ class CropFarmingGame {
         this.playerID = 'Not Connected';
         this.harvestBalance = 0;
         this.crops = [];
+        this.stakedAmount = 0;
         this.cropIcons = {
             'Bitcoin': '🪙',
             'Ethereum': '💎',
@@ -521,198 +522,198 @@ class CropFarmingGame {
                     },
                     {
                         "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint8",
-                "name": "_cropType",
-                "type": "uint8"
-            }
-        ],
-        "name": "getPlantingCost",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "pure",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "harvestToken",
-        "outputs": [
-            {
-                "internalType": "contract IERC20",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "lastWeatherChange",
-        "outputs": [
-            {
-                "internalType": "uint40",
-                "name": "",
-                "type": "uint40"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            }
-        ],
-        "name": "marketPrices",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "owner",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "REWARD_RATE",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "SCALING_FACTOR",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
             },
             {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "name": "stakes",
-        "outputs": [
-            {
-                "internalType": "uint248",
-                "name": "amount",
-                "type": "uint248"
+                "inputs": [
+                    {
+                        "internalType": "uint8",
+                        "name": "_cropType",
+                        "type": "uint8"
+                    }
+                ],
+                "name": "getPlantingCost",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "pure",
+                "type": "function"
             },
             {
-                "internalType": "uint40",
-                "name": "lastRewardTime",
-                "type": "uint40"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "STAKING_FEE",
-        "outputs": [
+                "inputs": [],
+                "name": "harvestToken",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "TREASURY",
-        "outputs": [
+                "inputs": [],
+                "name": "lastWeatherChange",
+                "outputs": [
+                    {
+                        "internalType": "uint40",
+                        "name": "",
+                        "type": "uint40"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
             {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "usdcToken",
-        "outputs": [
+                "inputs": [
+                    {
+                        "internalType": "uint8",
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "name": "marketPrices",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
             {
-                "internalType": "contract IERC20",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "WEATHER_DURATION",
-        "outputs": [
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
+                "inputs": [],
+                "name": "REWARD_RATE",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "SCALING_FACTOR",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "stakes",
+                "outputs": [
+                    {
+                        "internalType": "uint248",
+                        "name": "amount",
+                        "type": "uint248"
+                    },
+                    {
+                        "internalType": "uint40",
+                        "name": "lastRewardTime",
+                        "type": "uint40"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "STAKING_FEE",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "TREASURY",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "usdcToken",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "WEATHER_DURATION",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
             }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    }
-];
+        ];
         this.harvestTokenAddress = '0x051565d89b0490d4d87378F3Fe5Ca95D5aD18067';
         this.marketUpdateInterval = 300000; // 5 minutes in milliseconds
         this.marketCountdown = 300;
@@ -746,7 +747,6 @@ class CropFarmingGame {
                 "outputs": [{"name": "", "type": "bool"}],
                 "type": "function"
             }
-            // Add other necessary ERC20 functions here if needed
         ];
 
         this.initializeMarketPrices();
@@ -869,6 +869,21 @@ class CropFarmingGame {
         }
     }
 
+    async getStakedAmount() {
+        if (!this.contract || !this.accounts) {
+            console.log("Web3 or accounts not available");
+            return 0;
+        }
+
+        try {
+            const stakedAmount = await this.contract.methods.stakes(this.accounts[0], this.harvestTokenAddress).call();
+            return this.web3.utils.fromWei(stakedAmount.amount, 'ether');
+        } catch (error) {
+            console.error("Error fetching staked amount:", error);
+            return 0;
+        }
+    }
+
     async updateWeather() {
         console.log("Updating weather");
         if (this.contract && this.accounts) {
@@ -986,6 +1001,7 @@ class CropFarmingGame {
 
                 this.crops = farmStatus[0];
                 this.balance = parseInt(farmStatus[1]);
+                this.stakedAmount = await this.getStakedAmount();
                 this.updateWalletUI();
                 if (this.upgradeSystem) {
                     this.upgradeSystem.updateUpgradeUI('growthSpeed');
@@ -1191,8 +1207,21 @@ class CropFarmingGame {
             return;
         }
         cropList.innerHTML = '';
-        if (this.crops.length === 0) {
-            cropList.innerHTML = '<li>No crops planted yet.</li>';
+
+        // Add staked tokens to the list
+        if (this.stakedAmount > 0) {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span><span class="crop-icon">🏦</span>Staked Harvest Tokens</span>
+                <span>${this.stakedAmount} tokens</span>
+                <button class="unstake-btn">Unstake</button>
+            `;
+            li.querySelector('.unstake-btn').addEventListener('click', () => this.unstakeHarvestTokens(this.stakedAmount));
+            cropList.appendChild(li);
+        }
+
+        if (this.crops.length === 0 && this.stakedAmount === 0) {
+            cropList.innerHTML = '<li>No crops planted or tokens staked yet.</li>';
         } else {
             for (let index = 0; index < this.crops.length; index++) {
                 const crop = this.crops[index];
@@ -1274,6 +1303,32 @@ class CropFarmingGame {
         }
     }
 
+    async unstakeHarvestTokens(amount) {
+        console.log("Attempting to unstake Harvest tokens");
+        if (!this.contract || !this.accounts) {
+            alert("Please connect your wallet first!");
+            return;
+        }
+        try {
+            const amountInWei = this.web3.utils.toWei(amount.toString(), 'ether');
+            
+            const result = await this.contract.methods.unstake(this.harvestTokenAddress, amountInWei).send({ from: this.accounts[0] });
+            
+            if (result.status) {
+                console.log(`${amount} Harvest tokens unstaked successfully!`);
+                alert(`${amount} Harvest tokens unstaked successfully! Transaction hash: ${result.transactionHash}`);
+                await this.updateFarmStatus();
+                await this.updateHarvestTokenBalance();
+            } else {
+                console.error("Failed to unstake Harvest tokens");
+                alert("Failed to unstake Harvest tokens. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error unstaking Harvest tokens:", error);
+            alert(`Failed to unstake Harvest tokens: ${error.message}`);
+        }
+    }
+
     initializeUI() {
         console.log("Initializing UI");
         const connectWalletBtn = document.getElementById('connect-wallet-btn');
@@ -1308,6 +1363,15 @@ class CropFarmingGame {
             });
         } else {
             console.error("Stake button not found");
+        }
+        const unstakeBtn = document.getElementById('unstake-btn');
+        if (unstakeBtn) {
+            unstakeBtn.addEventListener('click', () => {
+                const amount = document.getElementById('token-amount').value;
+                this.unstakeHarvestTokens(amount);
+            });
+        } else {
+            console.error("Unstake button not found");
         }
         this.updateCropTypes();
         this.updateMarketUI();
@@ -1368,33 +1432,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Unstake button not found');
     }
 });
-
-// Add the unstakeHarvestTokens method to the CropFarmingGame class
-CropFarmingGame.prototype.unstakeHarvestTokens = async function(amount) {
-    console.log("Attempting to unstake Harvest tokens");
-    if (!this.contract || !this.accounts) {
-        alert("Please connect your wallet first!");
-        return;
-    }
-    try {
-        const amountInWei = this.web3.utils.toWei(amount.toString(), 'ether');
-        
-        const result = await this.contract.methods.unstake(this.harvestTokenAddress, amountInWei).send({ from: this.accounts[0] });
-        
-        if (result.status) {
-            console.log(`${amount} Harvest tokens unstaked successfully!`);
-            alert(`${amount} Harvest tokens unstaked successfully! Transaction hash: ${result.transactionHash}`);
-            await this.updateFarmStatus();
-            await this.updateHarvestTokenBalance();
-        } else {
-            console.error("Failed to unstake Harvest tokens");
-            alert("Failed to unstake Harvest tokens. Please try again.");
-        }
-    } catch (error) {
-        console.error("Error unstaking Harvest tokens:", error);
-        alert(`Failed to unstake Harvest tokens: ${error.message}`);
-    }
-};
 
 // Export the game instance if needed
 export default game;
