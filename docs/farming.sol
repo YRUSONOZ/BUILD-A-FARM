@@ -1,74 +1,148 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract CryptoFarming {
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract CryptoFarming is ReentrancyGuard, Ownable {
     enum Weather { Sunny, Rainy, Drought, CryptoWinter }
 
     struct Crop {
-        string cropType;
-        uint256 plantTime;
-        uint256 maturityTime;
-        uint256 baseReward;
+        uint8 cropType;
+        uint40 plantTime;
+        uint40 maturityTime;
+        uint168 baseReward;
     }
 
     struct Farm {
         Crop[] crops;
-        uint256 lastHarvestTime;
-        uint256 tokenBalance;
+        uint40 lastHarvestTime;
+        uint216 harvestTokenBalance;
     }
 
-    struct MarketPrice {
-        uint256 price;
-        uint256 lastUpdate;
+    struct StakeInfo {
+        uint248 amount;
+        uint40 lastRewardTime;
     }
 
     mapping(address => Farm) public farms;
-    mapping(string => uint256) public cropBaseRewards;
-    mapping(string => MarketPrice) public marketPrices;
+    mapping(uint8 => uint256) public cropBaseRewards;
+    mapping(uint8 => uint256) public marketPrices;
+    mapping(address => mapping(address => StakeInfo)) public stakes;
     
     uint256 public constant BASE_MATURITY_DURATION = 1 minutes;
-    uint256 public constant MARKET_UPDATE_INTERVAL = 5 minutes;
-    Weather public currentWeather;
-    uint256 public lastWeatherChange;
     uint256 public constant WEATHER_DURATION = 5 minutes;
+    uint256 public constant SCALING_FACTOR = 1e15;
+    uint256 public constant STAKING_FEE = 100; // 1%
+    uint256 public constant REWARD_RATE = 10; // 0.1% per day
 
-    event CropPlanted(address farmer, string cropType);
-    event CropsHarvested(address farmer, uint256 amount);
+    Weather public currentWeather;
+    uint40 public lastWeatherChange;
+    address public constant TREASURY = 0x4abAB0dC4bf60Bd41601715035bFFcC898b4E2aa;
+
+    IERC20 public immutable harvestToken;
+    IERC20 public immutable bitcoinToken;
+    IERC20 public immutable ethereumToken;
+    IERC20 public immutable usdcToken;
+
+    event CropPlanted(address indexed farmer, uint8 cropType);
+    event CropsHarvested(address indexed farmer, uint256 amount);
     event WeatherChanged(Weather newWeather);
-    event MarketPriceUpdated(string cropType, uint256 newPrice);
+    event MarketPriceUpdated(uint8 cropType, uint256 newPrice);
+    event Staked(address indexed user, address indexed token, uint256 amount);
+    event Unstaked(address indexed user, address indexed token, uint256 amount);
+    event RewardClaimed(address indexed user, uint256 amount);
 
-    address private _owner;
+    constructor(
+        address _harvestToken,
+        address _bitcoinToken,
+        address _ethereumToken,
+        address _usdcToken
+    ) Ownable(msg.sender) {
+        require(_harvestToken != address(0) && _bitcoinToken != address(0) && 
+                _ethereumToken != address(0) && _usdcToken != address(0), "Invalid token address");
 
-    constructor() {
-        _owner = msg.sender;
         currentWeather = Weather.Sunny;
-        lastWeatherChange = block.timestamp;
+        lastWeatherChange = uint40(block.timestamp);
         
-        // Set base rewards for each crop type
-        cropBaseRewards["Bitcoin"] = 50;
-        cropBaseRewards["Ethereum"] = 30;
-        cropBaseRewards["Dogecoin"] = 10;
+        harvestToken = IERC20(_harvestToken);
+        bitcoinToken = IERC20(_bitcoinToken);
+        ethereumToken = IERC20(_ethereumToken);
+        usdcToken = IERC20(_usdcToken);
 
-        // Initialize market prices
-        _updateMarketPrice("Bitcoin", 50000);
-        _updateMarketPrice("Ethereum", 3000);
-        _updateMarketPrice("Dogecoin", 1);
+        cropBaseRewards[0] = 50; // Bitcoin
+        cropBaseRewards[1] = 30; // Ethereum
+        cropBaseRewards[2] = 10; // Dogecoin
+
+        marketPrices[0] = 50000; // Bitcoin
+        marketPrices[1] = 3000;  // Ethereum
+        marketPrices[2] = 1;     // Dogecoin
     }
 
-    function _updateMarketPrice(string memory cropType, uint256 newPrice) private {
-        marketPrices[cropType] = MarketPrice(newPrice, block.timestamp);
-        emit MarketPriceUpdated(cropType, newPrice);
+    function stake(address token, uint256 amount) external nonReentrant {
+        require(token == address(harvestToken) || token == address(bitcoinToken) || 
+                token == address(ethereumToken) || token == address(usdcToken), "Invalid token");
+
+        uint256 fee = token != address(harvestToken) ? (amount * STAKING_FEE) / 10000 : 0;
+        if (fee > 0) IERC20(token).transferFrom(msg.sender, TREASURY, fee);
+
+        IERC20(token).transferFrom(msg.sender, address(this), amount - fee);
+
+        StakeInfo storage stakeInfo = stakes[msg.sender][token];
+        if (stakeInfo.amount > 0) {
+            farms[msg.sender].harvestTokenBalance += uint216(calculateReward(msg.sender, token));
+        }
+        stakeInfo.lastRewardTime = uint40(block.timestamp);
+        stakeInfo.amount += uint248(amount - fee);
+
+        emit Staked(msg.sender, token, amount - fee);
     }
 
-    function plantCrop(string memory _cropType, uint256 growthSpeedMultiplier) public {
-        require(cropBaseRewards[_cropType] > 0, "Invalid crop type");
+    function unstake(address token, uint256 amount) external nonReentrant {
+        StakeInfo storage stakeInfo = stakes[msg.sender][token];
+        require(stakeInfo.amount >= amount, "Insufficient staked amount");
+
+        uint256 reward = calculateReward(msg.sender, token);
+        stakeInfo.amount -= uint248(amount);
+        stakeInfo.lastRewardTime = uint40(block.timestamp);
+
+        IERC20(token).transfer(msg.sender, amount);
+        farms[msg.sender].harvestTokenBalance += uint216(reward);
+
+        emit Unstaked(msg.sender, token, amount);
+        emit RewardClaimed(msg.sender, reward);
+    }
+
+    function calculateReward(address user, address token) public view returns (uint256) {
+        StakeInfo storage stakeInfo = stakes[user][token];
+        return (uint256(stakeInfo.amount) * REWARD_RATE * (block.timestamp - stakeInfo.lastRewardTime)) / (100 * 365 days);
+    }
+
+    function claimReward(address token) external nonReentrant {
+        uint256 reward = calculateReward(msg.sender, token);
+        require(reward > 0, "No reward to claim");
+
+        stakes[msg.sender][token].lastRewardTime = uint40(block.timestamp);
+        farms[msg.sender].harvestTokenBalance += uint216(reward);
+
+        emit RewardClaimed(msg.sender, reward);
+    }
+
+    function plantCrop(uint8 _cropType, uint256 growthSpeedMultiplier) public {
+        require(_cropType < 3, "Invalid crop type");
         Farm storage farm = farms[msg.sender];
+        uint256 plantingCost = getPlantingCost(_cropType);
+        require(farm.harvestTokenBalance >= plantingCost, "Insufficient Harvest tokens");
+        
+        farm.harvestTokenBalance -= uint216(plantingCost);
         uint256 maturityTime = calculateMaturityTime(BASE_MATURITY_DURATION, growthSpeedMultiplier);
+        
         farm.crops.push(Crop({
             cropType: _cropType,
-            plantTime: block.timestamp,
-            maturityTime: block.timestamp + maturityTime,
-            baseReward: cropBaseRewards[_cropType]
+            plantTime: uint40(block.timestamp),
+            maturityTime: uint40(block.timestamp + maturityTime),
+            baseReward: uint168(cropBaseRewards[_cropType])
         }));
         
         emit CropPlanted(msg.sender, _cropType);
@@ -90,43 +164,18 @@ contract CryptoFarming {
         }
 
         if (reward > 0) {
-            farm.lastHarvestTime = block.timestamp;
-            farm.tokenBalance += reward;
+            farm.lastHarvestTime = uint40(block.timestamp);
+            farm.harvestTokenBalance += uint216(reward);
             emit CropsHarvested(msg.sender, reward);
         }
     }
 
-    function harvestSingleCrop(uint256 _index, uint256 yieldBoostMultiplier) public {
-        Farm storage farm = farms[msg.sender];
-        require(_index < farm.crops.length, "Invalid crop index");
-        Crop storage crop = farm.crops[_index];
-        require(crop.maturityTime <= block.timestamp, "Crop is not ready for harvest");
-
-        uint256 reward = calculateHarvestReward(crop.cropType, crop.baseReward, yieldBoostMultiplier);
-        farm.tokenBalance += reward;
-
-        // Remove the harvested crop
-        farm.crops[_index] = farm.crops[farm.crops.length - 1];
-        farm.crops.pop();
-
-        farm.lastHarvestTime = block.timestamp;
-
-        emit CropsHarvested(msg.sender, reward);
-    }
-
     function getFarmStatus(address _farmer) public view returns (Crop[] memory, uint256) {
-        return (farms[_farmer].crops, farms[_farmer].tokenBalance);
-    }
-
-    function getTokenBalance(address _farmer) public view returns (uint256) {
-        return farms[_farmer].tokenBalance;
+        return (farms[_farmer].crops, farms[_farmer].harvestTokenBalance);
     }
 
     function getCurrentWeather() public view returns (Weather) {
-        if (block.timestamp >= lastWeatherChange + WEATHER_DURATION) {
-            return generateNewWeather();
-        }
-        return currentWeather;
+        return block.timestamp >= lastWeatherChange + WEATHER_DURATION ? generateNewWeather() : currentWeather;
     }
 
     function generateNewWeather() private view returns (Weather) {
@@ -140,50 +189,34 @@ contract CryptoFarming {
     function updateWeather() public {
         if (block.timestamp >= lastWeatherChange + WEATHER_DURATION) {
             currentWeather = generateNewWeather();
-            lastWeatherChange = block.timestamp;
+            lastWeatherChange = uint40(block.timestamp);
             emit WeatherChanged(currentWeather);
         }
     }
 
     function calculateMaturityTime(uint256 baseTime, uint256 growthSpeedMultiplier) private view returns (uint256) {
         Weather weather = getCurrentWeather();
-        uint256 weatherMultiplier = 100;
-        if (weather == Weather.Sunny) weatherMultiplier = 80; // 20% faster
-        if (weather == Weather.Drought) weatherMultiplier = 120; // 20% slower
-
-        return (baseTime * weatherMultiplier * growthSpeedMultiplier) / 10000; // Divide by 10000 to account for percentages
+        uint256 weatherMultiplier = weather == Weather.Sunny ? 80 : (weather == Weather.Drought ? 120 : 100);
+        return (baseTime * weatherMultiplier * growthSpeedMultiplier) / 10000;
     }
 
-    function calculateHarvestReward(string memory cropType, uint256 baseReward, uint256 yieldBoostMultiplier) private view returns (uint256) {
+    function calculateHarvestReward(uint8 cropType, uint256 baseReward, uint256 yieldBoostMultiplier) private view returns (uint256) {
         Weather weather = getCurrentWeather();
-        uint256 weatherMultiplier = 100;
-        if (weather == Weather.Rainy) weatherMultiplier = 120; // 20% more yield
-        if (weather == Weather.CryptoWinter) weatherMultiplier = 80; // 20% less yield
-
-        uint256 currentPrice = getMarketPrice(cropType);
-        uint256 priceAdjustedReward = (baseReward * currentPrice) / 100; // Adjust reward based on current market price
-
-        return (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000; // Divide by 10000 to account for percentages
+        uint256 weatherMultiplier = weather == Weather.Rainy ? 120 : (weather == Weather.CryptoWinter ? 80 : 100);
+        uint256 priceAdjustedReward = (baseReward * marketPrices[cropType]) / SCALING_FACTOR;
+        return (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
     }
 
-    function updateMarketPrice(string memory cropType, uint256 newPrice) public {
-        require(msg.sender == _owner, "Only the owner can update market prices");
-        _updateMarketPrice(cropType, newPrice);
+    function updateMarketPrice(uint8 cropType, uint256 newPrice) public onlyOwner {
+        require(cropType < 3, "Invalid crop type");
+        marketPrices[cropType] = newPrice;
+        emit MarketPriceUpdated(cropType, newPrice);
     }
 
-    function getMarketPrice(string memory cropType) public view returns (uint256) {
-        MarketPrice memory price = marketPrices[cropType];
-        require(price.lastUpdate > 0, "Market price not set for this crop type");
-        return price.price;
-    }
-
-    function owner() public view returns (address) {
-        return _owner;
-    }
-
-    function transferOwnership(address newOwner) public {
-        require(msg.sender == _owner, "Only the current owner can transfer ownership");
-        require(newOwner != address(0), "New owner cannot be the zero address");
-        _owner = newOwner;
+    function getPlantingCost(uint8 _cropType) public pure returns (uint256) {
+        if (_cropType == 0) return 10; // Bitcoin
+        if (_cropType == 1) return 5;  // Ethereum
+        if (_cropType == 2) return 1;  // Dogecoin
+        return 0;
     }
 }
