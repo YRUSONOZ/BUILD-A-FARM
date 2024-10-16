@@ -1198,6 +1198,36 @@ class CropFarmingGame {
         return amountFloat.toFixed(4); // Display up to 4 decimal places
     }
 
+    async stakeHarvestTokens(amount) {
+        console.log("Attempting to stake Harvest tokens");
+        if (!this.contract || !this.accounts) {
+            alert("Please connect your wallet first!");
+            return;
+        }
+        try {
+            const harvestTokenContract = new this.web3.eth.Contract(this.erc20ABI, this.harvestTokenAddress);
+            
+            // First, approve the contract to spend tokens
+            await harvestTokenContract.methods.approve(this.contractAddress, amount).send({ from: this.accounts[0] });
+            console.log("Approval successful");
+
+            // Then, stake the tokens
+            const result = await this.contract.methods.stake(this.harvestTokenAddress, amount).send({ from: this.accounts[0] });
+            
+            if (result.status) {
+                console.log(`${amount} Harvest tokens staked successfully!`);
+                alert(`${amount} Harvest tokens staked successfully! Transaction hash: ${result.transactionHash}`);
+                await this.updateFarmStatus();
+            } else {
+                console.error("Failed to stake Harvest tokens");
+                alert("Failed to stake Harvest tokens. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error staking Harvest tokens:", error);
+            alert(`Failed to stake Harvest tokens: ${error.message}`);
+        }
+    }
+
     initializeUI() {
         console.log("Initializing UI");
         const connectWalletBtn = document.getElementById('connect-wallet-btn');
@@ -1223,6 +1253,15 @@ class CropFarmingGame {
             harvestBtn.addEventListener('click', () => this.harvestCrops());
         } else {
             console.error("Harvest button not found");
+        }
+        const stakeBtn = document.getElementById('stake-btn');
+        if (stakeBtn) {
+            stakeBtn.addEventListener('click', () => {
+                const amount = document.getElementById('token-amount').value;
+                this.stakeHarvestTokens(amount);
+            });
+        } else {
+            console.error("Stake button not found");
         }
         this.updateCropTypes();
         this.updateMarketUI();
