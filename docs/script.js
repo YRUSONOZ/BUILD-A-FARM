@@ -867,6 +867,7 @@ class CropFarmingGame {
 		],
 		"stateMutability": "view",
 		"type": "function"
+	}
 ];
         this.harvestTokenAddress = '0x051565d89b0490d4d87378F3Fe5Ca95D5aD18067';
         this.marketUpdateInterval = 300000; // 5 minutes in milliseconds
