@@ -1396,7 +1396,7 @@ class CropFarmingGame {
                         <span>${this.web3.utils.fromWei(stakedAmount.amount, 'ether')} tokens</span>
                         <span>Claimable Rewards: ${this.web3.utils.fromWei(claimableRewards, 'ether')} tokens</span>
                         <button class="unstake-btn">Unstake</button>
-                        <button class="claim-btn">Claim Rewards</button>
+                        <button class="claim-btn">Claim</button>
                     `;
                     li.querySelector('.unstake-btn').addEventListener('click', () => this.unstakeHarvestTokens(stakedAmount.amount));
                     li.querySelector('.claim-btn').addEventListener('click', () => this.claimRewards());
