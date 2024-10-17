@@ -30,21 +30,25 @@ contract CryptoFarming is ReentrancyGuard, Ownable {
     mapping(uint8 => uint256) public cropBaseRewards;
     mapping(uint8 => uint256) public marketPrices;
     mapping(address => mapping(address => StakeInfo)) public stakes;
+    mapping(address => mapping(address => uint256)) public accumulatedRewards;
     
     uint256 public constant BASE_MATURITY_DURATION = 1 minutes;
     uint256 public constant WEATHER_DURATION = 5 minutes;
     uint256 public constant SCALING_FACTOR = 1e15;
     uint256 public constant STAKING_FEE = 100; // 1%
-    uint256 public constant REWARD_RATE = 10; // 0.1% per day
+    uint256 public constant SECONDS_PER_DAY = 86400;
+    uint256 public constant REWARD_RATE_PRECISION = 10000; // Precision factor for reward rate
+
+    uint256 public rewardRate; // Adjustable reward rate
 
     Weather public currentWeather;
     uint40 public lastWeatherChange;
     address public constant TREASURY = 0x4abAB0dC4bf60Bd41601715035bFFcC898b4E2aa;
 
-    IERC20 public immutable harvestToken;
-    IERC20 public immutable bitcoinToken;
-    IERC20 public immutable ethereumToken;
-    IERC20 public immutable usdcToken;
+    IERC20 public harvestToken;
+    IERC20 public bitcoinToken;
+    IERC20 public ethereumToken;
+    IERC20 public usdcToken;
 
     event CropPlanted(address indexed farmer, uint8 cropType);
     event CropsHarvested(address indexed farmer, uint256 amount);
@@ -52,24 +56,13 @@ contract CryptoFarming is ReentrancyGuard, Ownable {
     event MarketPriceUpdated(uint8 cropType, uint256 newPrice);
     event Staked(address indexed user, address indexed token, uint256 amount);
     event Unstaked(address indexed user, address indexed token, uint256 amount);
-    event RewardClaimed(address indexed user, uint256 amount);
+    event RewardClaimed(address indexed user, address indexed token, uint256 amount);
+    event RewardRateUpdated(uint256 newRate);
+    event TokenAddressUpdated(string tokenName, address newAddress);
 
-    constructor(
-        address _harvestToken,
-        address _bitcoinToken,
-        address _ethereumToken,
-        address _usdcToken
-    ) Ownable(msg.sender) {
-        require(_harvestToken != address(0) && _bitcoinToken != address(0) && 
-                _ethereumToken != address(0) && _usdcToken != address(0), "Invalid token address");
-
+    constructor() Ownable(msg.sender) {
         currentWeather = Weather.Sunny;
         lastWeatherChange = uint40(block.timestamp);
-        
-        harvestToken = IERC20(_harvestToken);
-        bitcoinToken = IERC20(_bitcoinToken);
-        ethereumToken = IERC20(_ethereumToken);
-        usdcToken = IERC20(_usdcToken);
 
         cropBaseRewards[0] = 50; // Bitcoin
         cropBaseRewards[1] = 30; // Ethereum
@@ -78,11 +71,38 @@ contract CryptoFarming is ReentrancyGuard, Ownable {
         marketPrices[0] = 50000; // Bitcoin
         marketPrices[1] = 3000;  // Ethereum
         marketPrices[2] = 1;     // Dogecoin
+
+        rewardRate = 10; // Initial reward rate of 0.1% daily (10 / 10000)
+    }
+
+    function setHarvestTokenAddress(address _harvestToken) external onlyOwner {
+        require(_harvestToken != address(0), "Invalid address");
+        harvestToken = IERC20(_harvestToken);
+        emit TokenAddressUpdated("Harvest", _harvestToken);
+    }
+
+    function setBitcoinTokenAddress(address _bitcoinToken) external onlyOwner {
+        require(_bitcoinToken != address(0), "Invalid address");
+        bitcoinToken = IERC20(_bitcoinToken);
+        emit TokenAddressUpdated("Bitcoin", _bitcoinToken);
+    }
+
+    function setEthereumTokenAddress(address _ethereumToken) external onlyOwner {
+        require(_ethereumToken != address(0), "Invalid address");
+        ethereumToken = IERC20(_ethereumToken);
+        emit TokenAddressUpdated("Ethereum", _ethereumToken);
+    }
+
+    function setUsdcTokenAddress(address _usdcToken) external onlyOwner {
+        require(_usdcToken != address(0), "Invalid address");
+        usdcToken = IERC20(_usdcToken);
+        emit TokenAddressUpdated("USDC", _usdcToken);
     }
 
     function stake(address token, uint256 amount) external nonReentrant {
         require(token == address(harvestToken) || token == address(bitcoinToken) || 
                 token == address(ethereumToken) || token == address(usdcToken), "Invalid token");
+        require(token != address(0), "Token address not set");
 
         uint256 fee = token != address(harvestToken) ? (amount * STAKING_FEE) / 10000 : 0;
         if (fee > 0) IERC20(token).transferFrom(msg.sender, TREASURY, fee);
@@ -91,7 +111,7 @@ contract CryptoFarming is ReentrancyGuard, Ownable {
 
         StakeInfo storage stakeInfo = stakes[msg.sender][token];
         if (stakeInfo.amount > 0) {
-            farms[msg.sender].harvestTokenBalance += uint216(calculateReward(msg.sender, token));
+            accumulatedRewards[msg.sender][token] += calculateRewards(msg.sender, token);
         }
         stakeInfo.lastRewardTime = uint40(block.timestamp);
         stakeInfo.amount += uint248(amount - fee);
@@ -103,33 +123,43 @@ contract CryptoFarming is ReentrancyGuard, Ownable {
         StakeInfo storage stakeInfo = stakes[msg.sender][token];
         require(stakeInfo.amount >= amount, "Insufficient staked amount");
 
-        uint256 reward = calculateReward(msg.sender, token);
+        uint256 rewards = getClaimableRewards(msg.sender, token);
         stakeInfo.amount -= uint248(amount);
         stakeInfo.lastRewardTime = uint40(block.timestamp);
+        accumulatedRewards[msg.sender][token] = 0;
 
         IERC20(token).transfer(msg.sender, amount);
-        farms[msg.sender].harvestTokenBalance += uint216(reward);
+        if (rewards > 0) {
+            IERC20(token).transfer(msg.sender, rewards);
+            emit RewardClaimed(msg.sender, token, rewards);
+        }
 
         emit Unstaked(msg.sender, token, amount);
-        emit RewardClaimed(msg.sender, reward);
     }
 
-    function calculateReward(address user, address token) public view returns (uint256) {
+    function calculateRewards(address user, address token) public view returns (uint256) {
         StakeInfo storage stakeInfo = stakes[user][token];
-        return (uint256(stakeInfo.amount) * REWARD_RATE * (block.timestamp - stakeInfo.lastRewardTime)) / (100 * 365 days);
+        uint256 timeElapsed = block.timestamp - stakeInfo.lastRewardTime;
+        return (uint256(stakeInfo.amount) * rewardRate * timeElapsed) / (SECONDS_PER_DAY * REWARD_RATE_PRECISION);
     }
 
-    function claimReward(address token) external nonReentrant {
-        uint256 reward = calculateReward(msg.sender, token);
-        require(reward > 0, "No reward to claim");
+    function getClaimableRewards(address user, address token) public view returns (uint256) {
+        return accumulatedRewards[user][token] + calculateRewards(user, token);
+    }
+
+    function claimRewards(address token) external nonReentrant {
+        uint256 rewards = getClaimableRewards(msg.sender, token);
+        require(rewards > 0, "No rewards to claim");
 
         stakes[msg.sender][token].lastRewardTime = uint40(block.timestamp);
-        farms[msg.sender].harvestTokenBalance += uint216(reward);
+        accumulatedRewards[msg.sender][token] = 0;
 
-        emit RewardClaimed(msg.sender, reward);
+        IERC20(token).transfer(msg.sender, rewards);
+        emit RewardClaimed(msg.sender, token, rewards);
     }
 
     function plantCrop(uint8 _cropType, uint256 growthSpeedMultiplier) public {
+        require(address(harvestToken) != address(0), "Harvest token address not set");
         require(_cropType < 3, "Invalid crop type");
         Farm storage farm = farms[msg.sender];
         uint256 plantingCost = getPlantingCost(_cropType);
@@ -218,5 +248,11 @@ contract CryptoFarming is ReentrancyGuard, Ownable {
         if (_cropType == 1) return 5;  // Ethereum
         if (_cropType == 2) return 1;  // Dogecoin
         return 0;
+    }
+
+    function updateRewardRate(uint256 newRate) public onlyOwner {
+        require(newRate <= REWARD_RATE_PRECISION, "Rate too high"); // Ensures rate doesn't exceed 100%
+        rewardRate = newRate;
+        emit RewardRateUpdated(newRate);
     }
 }
