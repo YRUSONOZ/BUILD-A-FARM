@@ -888,6 +888,10 @@ class CropFarmingGame {
         this.weatherCheckInterval = 30;
         this.cropUpdateInterval = null;
         this.upgradeSystem = new UpgradeSystem(this);
+        this.tokenBalances = {
+            harvest: 0,
+            usdc: 0
+        };
 
         this.erc20ABI = [
             {
@@ -981,11 +985,12 @@ class CropFarmingGame {
                 this.updateWalletUI();
                 await this.updateFarmStatus();
                 this.updateWeather();
-                await this.updateHarvestTokenBalance();
-                await this.updateUSDCBalance();
+                await this.updateTokenBalances();
+                this.updateSelectedTokenBalance();
 
                 this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
                 this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
+                this.tokenBalanceInterval = setInterval(() => this.updateTokenBalances(), 30000);
                 console.log("Wallet connected successfully");
             } catch (error) {
                 console.error("Detailed wallet connection error:", error);
@@ -1008,6 +1013,7 @@ class CropFarmingGame {
         document.getElementById('disconnect-wallet-btn').style.display = 'none';
         clearInterval(this.farmStatusInterval);
         clearInterval(this.weatherInterval);
+        clearInterval(this.tokenBalanceInterval);
         if (this.cropUpdateInterval) {
             clearInterval(this.cropUpdateInterval);
         }
@@ -1034,7 +1040,7 @@ class CropFarmingGame {
         }
     }
 
-    async updateHarvestTokenBalance() {
+    async updateTokenBalances() {
         if (!this.web3 || !this.accounts) {
             console.log("Web3 or accounts not available");
             return;
@@ -1042,50 +1048,43 @@ class CropFarmingGame {
 
         try {
             const harvestTokenContract = new this.web3.eth.Contract(this.erc20ABI, this.harvestTokenAddress);
-            const balance = await harvestTokenContract.methods.balanceOf(this.accounts[0]).call();
-            const balanceInEther = this.web3.utils.fromWei(balance, 'ether');
-            console.log("Harvest Token Balance:", balanceInEther);
+            const usdcTokenContract = new this.web3.eth.Contract(this.erc20ABI, this.usdcTokenAddress);
 
-            // Update the UI
-            const harvestTokenBalanceElement = document.getElementById('harvest-token-balance');
-            if (harvestTokenBalanceElement) {
-                harvestTokenBalanceElement.textContent = balanceInEther;
-            } else {
-                console.error("Harvest token balance element not found");
-            }
+            const harvestBalance = await harvestTokenContract.methods.balanceOf(this.accounts[0]).call();
+            const usdcBalance = await usdcTokenContract.methods.balanceOf(this.accounts[0]).call();
 
-            // Update the balance in the wallet UI as well
-            const playerBalanceSpan = document.getElementById('player-balance');
-            if (playerBalanceSpan) {
-                playerBalanceSpan.innerHTML = `<i class="fas fa-coins"></i> ${balanceInEther} Harvest tokens`;
-            }
+            this.tokenBalances.harvest = this.web3.utils.fromWei(harvestBalance, 'ether');
+            this.tokenBalances.usdc = this.web3.utils.fromWei(usdcBalance, 'mwei'); // USDC has 6 decimals
+
+            console.log("Token balances updated:", this.tokenBalances);
+            this.updateSelectedTokenBalance();
         } catch (error) {
-            console.error("Error fetching Harvest token balance:", error);
+            console.error("Error updating token balances:", error);
         }
     }
 
-    async updateUSDCBalance() {
-        if (!this.web3 || !this.accounts) {
-            console.log("Web3 or accounts not available");
-            return;
-        }
+    updateSelectedTokenBalance() {
+        const tokenSelect = document.getElementById('token-select');
+        const selectedToken = tokenSelect.value;
+        const balanceElement = document.getElementById('selected-token-balance');
+        const stakedBalanceElement = document.getElementById('staked-token-balance');
+        const apyElement = document.getElementById('token-staking-apy');
 
-        try {
-            const usdcTokenContract = new this.web3.eth.Contract(this.erc20ABI, this.usdcTokenAddress);
-            const balance = await usdcTokenContract.methods.balanceOf(this.accounts[0]).call();
-            const balanceInUSDC = this.web3.utils.fromWei(balance, 'mwei'); // USDC has 6 decimals
-            console.log("USDC Balance:", balanceInUSDC);
+        balanceElement.textContent = this.formatTokenAmount(this.tokenBalances[selectedToken]);
 
-            // Update the UI
-            const usdcBalanceElement = document.getElementById('usdc-balance');
-            if (usdcBalanceElement) {
-                usdcBalanceElement.textContent = balanceInUSDC;
-            } else {
-                console.error("USDC balance element not found");
-            }
-        } catch (error) {
-            console.error("Error fetching USDC balance:", error);
-        }
+        // Update staked balance and APY
+        this.contract.methods.stakes(this.accounts[0], selectedToken === 'usdc' ? this.usdcTokenAddress : this.harvestTokenAddress).call()
+            .then(stake => {
+                const stakedAmount = this.web3.utils.fromWei(stake.amount, selectedToken === 'usdc' ? 'mwei' : 'ether');
+                stakedBalanceElement.textContent = this.formatTokenAmount(stakedAmount);
+                return this.getStakingAPY(selectedToken === 'usdc' ? this.usdcTokenAddress : this.harvestTokenAddress);
+            })
+            .then(apy => {
+                apyElement.textContent = `${apy}%`;
+            })
+            .catch(error => {
+                console.error("Error updating staked balance and APY:", error);
+            });
     }
 
     async updateWeather() {
@@ -1517,8 +1516,7 @@ class CropFarmingGame {
                     console.log(`${amount} ${tokenType.toUpperCase()} tokens staked successfully!`);
                     alert(`${amount} ${tokenType.toUpperCase()} tokens staked successfully! Transaction hash: ${result.transactionHash}`);
                     await this.updateFarmStatus();
-                    await this.updateHarvestTokenBalance();
-                    await this.updateUSDCBalance();
+                    await this.updateTokenBalances();
                 } else {
                     console.error(`Failed to stake ${tokenType.toUpperCase()} tokens`);
                     alert(`Failed to stake ${tokenType.toUpperCase()} tokens. Please try again.`);
@@ -1548,8 +1546,7 @@ class CropFarmingGame {
                 console.log(`${unstakedAmount} ${tokenType} unstaked successfully!`);
                 alert(`${unstakedAmount} ${tokenType} unstaked successfully! Transaction hash: ${result.transactionHash}`);
                 await this.updateFarmStatus();
-                await this.updateHarvestTokenBalance();
-                await this.updateUSDCBalance();
+                await this.updateTokenBalances();
             } else {
                 console.error("Failed to unstake tokens");
                 alert("Failed to unstake tokens. Please try again.");
@@ -1573,8 +1570,7 @@ class CropFarmingGame {
                 console.log("Rewards claimed successfully!");
                 alert("Rewards claimed successfully!");
                 await this.updateFarmStatus();
-                await this.updateHarvestTokenBalance();
-                await this.updateUSDCBalance();
+                await this.updateTokenBalances();
             } else {
                 console.error("Failed to claim rewards");
                 alert("Failed to claim rewards. Please try again.");
@@ -1594,27 +1590,6 @@ class CropFarmingGame {
         } catch (error) {
             console.error("Error fetching staking APY:", error);
             return "N/A";
-        }
-    }
-
-    async updateStakingInfo() {
-        const harvestStakingAPY = await this.getStakingAPY(this.harvestTokenAddress);
-        const usdcStakingAPY = await this.getStakingAPY(this.usdcTokenAddress);
-
-        document.getElementById('harvest-staking-apy').textContent = `${harvestStakingAPY}%`;
-        document.getElementById('usdc-staking-apy').textContent = `${usdcStakingAPY}%`;
-
-        // Update staked balances
-        if (this.contract && this.accounts) {
-            try {
-                const stakedHarvest = await this.contract.methods.stakes(this.accounts[0], this.harvestTokenAddress).call();
-                const stakedUSDC = await this.contract.methods.stakes(this.accounts[0], this.usdcTokenAddress).call();
-
-                document.getElementById('staked-harvest-token-balance').textContent = this.web3.utils.fromWei(stakedHarvest.amount, 'ether');
-                document.getElementById('staked-usdc-balance').textContent = this.web3.utils.fromWei(stakedUSDC.amount, 'mwei');
-            } catch (error) {
-                console.error("Error fetching staked balances:", error);
-            }
         }
     }
 
@@ -1659,21 +1634,13 @@ class CropFarmingGame {
                 const tokenAddress = tokenType === 'usdc' ? this.usdcTokenAddress : this.harvestTokenAddress;
                 this.unstakeTokens(tokenAddress, this.web3.utils.toWei(amount, tokenType === 'usdc' ? 'mwei' : 'ether'));
             });
+            tokenSelect.addEventListener('change', () => this.updateSelectedTokenBalance());
         } else {
             console.error("Stake/Unstake buttons or token select not found");
         }
         this.updateCropTypes();
         this.updateMarketUI();
         this.updateWeatherUI();
-
-        // Update Harvest token and USDC balances every 30 seconds
-        setInterval(() => {
-            this.updateHarvestTokenBalance();
-            this.updateUSDCBalance();
-        }, 30000);
-
-        // Update staking info every 60 seconds
-        setInterval(() => this.updateStakingInfo(), 60000);
 
         console.log("UI initialized");
     }
