@@ -530,7 +530,7 @@ class CropFarmingGame {
                         "type": "tuple[]"
                     },
                     {
-                         "internalType": "uint256",
+                        "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
             }
@@ -969,9 +969,9 @@ class CropFarmingGame {
                 // Set up the game state
                 this.playerID = this.accounts[0];
                 this.updateWalletUI();
+                await this.updateTokenBalances(); // Add this line
                 await this.updateFarmStatus();
                 this.updateWeather();
-                await this.updateTokenBalances();
                 this.updateSelectedTokenBalance();
 
                 // Set up intervals for updates
@@ -1058,8 +1058,8 @@ class CropFarmingGame {
         const stakedBalanceElement = document.getElementById('staked-token-balance');
         const apyElement = document.getElementById('token-staking-apy');
 
-        if (!tokenSelect) {
-            console.error("Token select element not found");
+        if (!tokenSelect || !balanceElement) {
+            console.error("Token select or balance element not found");
             return;
         }
 
@@ -1075,11 +1075,9 @@ class CropFarmingGame {
         }
 
         // Display the wallet balance for the selected token
-        if (balanceElement) {
-            balanceElement.textContent = this.formatTokenAmount(this.tokenBalances[selectedToken]);
-        } else {
-            console.error("Balance element not found");
-        }
+        const walletBalance = this.tokenBalances[selectedToken];
+        console.log(`Wallet balance for ${selectedToken}:`, walletBalance);
+        balanceElement.textContent = this.formatTokenAmount(walletBalance);
 
         // Update staked balance and APY
         if (this.contract && this.accounts) {
@@ -1681,6 +1679,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize UI elements that depend on the DOM being loaded
     game.initializeUI();
+
+    // Set up event listeners for token selection and balance updates
+    const tokenSelect = document.getElementById('token-select');
+    if (tokenSelect) {
+        tokenSelect.addEventListener('change', () => {
+            game.updateSelectedTokenBalance();
+        });
+    }
+
+    // Set up periodic updates
+    setInterval(() => {
+        if (game.accounts && game.accounts.length > 0) {
+            game.updateTokenBalances();
+            game.updateFarmStatus();
+        }
+    }, 30000); // Update every 30 seconds
 });
 
 // Export the game instance if needed
