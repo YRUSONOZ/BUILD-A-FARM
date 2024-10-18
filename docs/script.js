@@ -1052,32 +1052,61 @@ class CropFarmingGame {
     }
 
     updateSelectedTokenBalance() {
+        console.log("Updating selected token balance");
         const tokenSelect = document.getElementById('token-select');
-        const selectedToken = tokenSelect.value;
         const balanceElement = document.getElementById('selected-token-balance');
         const stakedBalanceElement = document.getElementById('staked-token-balance');
         const apyElement = document.getElementById('token-staking-apy');
 
+        if (!tokenSelect) {
+            console.error("Token select element not found");
+            return;
+        }
+
+        const selectedToken = tokenSelect.value;
+        console.log("Selected token:", selectedToken);
+
         // Update the label to "Wallet Balance"
-        document.querySelector('label[for="selected-token-balance"]').textContent = 'Wallet Balance:';
+        const balanceLabel = document.querySelector('label[for="selected-token-balance"]');
+        if (balanceLabel) {
+            balanceLabel.textContent = 'Wallet Balance:';
+        } else {
+            console.error("Balance label element not found");
+        }
 
         // Display the wallet balance for the selected token
-        balanceElement.textContent = this.formatTokenAmount(this.tokenBalances[selectedToken]);
+        if (balanceElement) {
+            balanceElement.textContent = this.formatTokenAmount(this.tokenBalances[selectedToken]);
+        } else {
+            console.error("Balance element not found");
+        }
 
         // Update staked balance and APY
-        const tokenAddress = selectedToken === 'usdc' ? this.usdcTokenAddress : this.harvestTokenAddress;
-        this.contract.methods.stakes(this.accounts[0], tokenAddress).call()
-            .then(stake => {
-                const stakedAmount = this.web3.utils.fromWei(stake.amount, selectedToken === 'usdc' ? 'mwei' : 'ether');
-                stakedBalanceElement.textContent = this.formatTokenAmount(stakedAmount);
-                return this.getStakingAPY(tokenAddress);
-            })
-            .then(apy => {
-                apyElement.textContent = `${apy}%`;
-            })
-            .catch(error => {
-                console.error("Error updating staked balance and APY:", error);
-            });
+        if (this.contract && this.accounts) {
+            const tokenAddress = selectedToken === 'usdc' ? this.usdcTokenAddress : this.harvestTokenAddress;
+            this.contract.methods.stakes(this.accounts[0], tokenAddress).call()
+                .then(stake => {
+                    const stakedAmount = this.web3.utils.fromWei(stake.amount, selectedToken === 'usdc' ? 'mwei' : 'ether');
+                    if (stakedBalanceElement) {
+                        stakedBalanceElement.textContent = this.formatTokenAmount(stakedAmount);
+                    } else {
+                        console.error("Staked balance element not found");
+                    }
+                    return this.getStakingAPY(tokenAddress);
+                })
+                .then(apy => {
+                    if (apyElement) {
+                        apyElement.textContent = `${apy}%`;
+                    } else {
+                        console.error("APY element not found");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error updating staked balance and APY:", error);
+                });
+        } else {
+            console.log("Contract or accounts not available, skipping staked balance and APY update");
+        }
     }
 
     async updateWeather() {
@@ -1649,6 +1678,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.error('Connect wallet button not found');
     }
+
+    // Initialize UI elements that depend on the DOM being loaded
+    game.initializeUI();
 });
 
 // Export the game instance if needed
