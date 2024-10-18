@@ -530,7 +530,7 @@ class CropFarmingGame {
                         "type": "tuple[]"
                     },
                     {
-                        "internalType": "uint256",
+                         "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
             }
@@ -929,11 +929,15 @@ class CropFarmingGame {
         console.log("Attempting to connect wallet");
         if (typeof window.ethereum !== 'undefined') {
             try {
+                // Request account access
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 console.log("Accounts received:", accounts);
+                
+                // Initialize Web3
                 this.web3 = new Web3(window.ethereum);
                 this.accounts = accounts;
 
+                // Check network
                 const networkId = await this.web3.eth.net.getId();
                 console.log("Network ID:", networkId);
                 const sepoliaTestnetId = 11155111;
@@ -942,23 +946,27 @@ class CropFarmingGame {
                     return;
                 }
 
+                // Initialize contract
                 try {
                     this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
                     console.log("Contract initialized:", this.contract);
-                    console.log("Contract methods:", Object.keys(this.contract.methods));
-                    // Test calling a method
+                    
+                    // Test contract method
                     try {
                         const result = await this.contract.methods.getFarmStatus(this.accounts[0]).call();
                         console.log("getFarmStatus result:", result);
                     } catch (methodError) {
                         console.error("Error calling getFarmStatus:", methodError);
+                        alert("Error interacting with the contract. Please check if you're connected to the correct network and the contract address is correct.");
+                        return;
                     }
                 } catch (contractError) {
                     console.error("Error initializing contract:", contractError);
-                    alert("Failed to initialize contract. Please check the console for more details.");
+                    alert("Failed to initialize contract. Please check if you're connected to the correct network and the contract address is correct.");
                     return;
                 }
 
+                // Set up the game state
                 this.playerID = this.accounts[0];
                 this.updateWalletUI();
                 await this.updateFarmStatus();
@@ -966,13 +974,15 @@ class CropFarmingGame {
                 await this.updateTokenBalances();
                 this.updateSelectedTokenBalance();
 
+                // Set up intervals for updates
                 this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
                 this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
                 this.tokenBalanceInterval = setInterval(() => this.updateTokenBalances(), 30000);
+                
                 console.log("Wallet connected successfully");
             } catch (error) {
                 console.error("Detailed wallet connection error:", error);
-                alert("Failed to connect wallet. Please check the console for more details and try again.");
+                alert(`Failed to connect wallet: ${error.message}. Please check the console for more details and try again.`);
             }
         } else {
             console.error("Ethereum wallet not found");
@@ -1261,12 +1271,14 @@ class CropFarmingGame {
         if (this.contract && this.accounts) {
             for (const crop of this.cropTypes) {
                 try {
-                    const newPrice = await this.contract.methods.marketPrices(crop.name).call();
+                    const newPrice = await this.contract.methods.marketPrices(this.cropTypes.indexOf(crop)).call();
                     console.log(`Market price for ${crop.name}:`, newPrice);
                     this.marketPrices[crop.name].currentPrice = parseInt(newPrice);
                     this.marketPrices[crop.name].trend = newPrice > this.marketPrices[crop.name].currentPrice ? 'up' : 'down';
                 } catch (error) {
                     console.error(`Failed to update market price for ${crop.name}:`, error);
+                    // Use fallback price if contract call fails
+                    this.marketPrices[crop.name].currentPrice = crop.baseReward;
                 }
             }
         } else {
@@ -1314,43 +1326,22 @@ class CropFarmingGame {
         const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
         console.log(`Yield Boost Multiplier: ${yieldBoostMultiplier}`);
         
-        let marketPrice;
-        try {
-            marketPrice = await this.contract.methods.marketPrices(cropType).call();
-            console.log(`Market Price for ${cropType}: ${marketPrice}`);
-        } catch (error) {
-            console.error(`Error getting market price for ${cropType}:`, error);
-            marketPrice = this.marketPrices[cropType].currentPrice;
-            console.log(`Using fallback market price: ${marketPrice}`);
-        }
+        let marketPrice = this.marketPrices[cropType].currentPrice;
+        console.log(`Market Price for ${cropType}: ${marketPrice}`);
 
-        let weather;
-        try {
-            weather = await this.contract.methods.getCurrentWeather().call();
-            console.log(`Current Weather: ${weather}`);
-        } catch (error) {
-            console.error("Error getting current weather:", error);
-            weather = this.currentWeather;
-            console.log(`Using fallback weather: ${weather}`);
-        }
+        let weather = this.currentWeather;
+        console.log(`Current Weather: ${weather}`);
         
         let weatherMultiplier = 100;
         if (weather == 1) weatherMultiplier = 120; // Rainy
         if (weather == 3) weatherMultiplier = 80; // CryptoWinter
         console.log(`Weather Multiplier: ${weatherMultiplier}`);
 
-        let scalingFactor;
-        try {
-            scalingFactor = await this.contract.methods.SCALING_FACTOR().call();
-            console.log(`Scaling Factor: ${scalingFactor}`);
-        } catch (error) {
-            console.error("Error getting SCALING_FACTOR:", error);
-            scalingFactor = '1000000000000000'; // Fallback value, adjust if needed
-            console.log(`Using fallback Scaling Factor: ${scalingFactor}`);
-        }
+        const scalingFactor = 1e15; // Use a constant scaling factor
+        console.log(`Scaling Factor: ${scalingFactor}`);
 
         // Use regular JavaScript numbers for calculations
-        const priceAdjustedReward = (baseReward * Number(marketPrice)) / Number(scalingFactor);
+        const priceAdjustedReward = (baseReward * marketPrice) / scalingFactor;
         console.log(`Price Adjusted Reward: ${priceAdjustedReward}`);
 
         const estimatedReward = (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
