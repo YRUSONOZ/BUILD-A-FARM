@@ -1076,6 +1076,7 @@ class CropFarmingGame {
             const balanceInUSDC = this.web3.utils.fromWei(balance, 'mwei'); // USDC has 6 decimals
             console.log("USDC Balance:", balanceInUSDC);
 
+            // Update the UI
             const usdcBalanceElement = document.getElementById('usdc-balance');
             if (usdcBalanceElement) {
                 usdcBalanceElement.textContent = balanceInUSDC;
@@ -1413,15 +1414,15 @@ class CropFarmingGame {
         // Add staked tokens to the list
         if (this.contract && this.accounts) {
             try {
-                const stakedHarvestAmount = await this.contract.methods.stakes(this.accounts[0], this.harvestTokenAddress).call();
-                const stakedUSDCAmount = await this.contract.methods.stakes(this.accounts[0], this.usdcTokenAddress).call();
+                const stakedHarvest = await this.contract.methods.stakes(this.accounts[0], this.harvestTokenAddress).call();
+                const stakedUSDC = await this.contract.methods.stakes(this.accounts[0], this.usdcTokenAddress).call();
 
-                if (parseInt(stakedHarvestAmount.amount) > 0) {
-                    this.addStakedTokenToList(cropList, 'Harvest Token', stakedHarvestAmount.amount, this.harvestTokenAddress);
+                if (parseInt(stakedHarvest.amount) > 0) {
+                    this.addStakedTokenToList(cropList, 'Harvest Token', stakedHarvest.amount, this.harvestTokenAddress);
                 }
 
-                if (parseInt(stakedUSDCAmount.amount) > 0) {
-                    this.addStakedTokenToList(cropList, 'USDC', stakedUSDCAmount.amount, this.usdcTokenAddress);
+                if (parseInt(stakedUSDC.amount) > 0) {
+                    this.addStakedTokenToList(cropList, 'USDC', stakedUSDC.amount, this.usdcTokenAddress);
                 }
             } catch (error) {
                 console.error("Error fetching staked amounts:", error);
@@ -1473,15 +1474,14 @@ class CropFarmingGame {
 
     addStakedTokenToList(cropList, tokenName, amount, tokenAddress) {
         const li = document.createElement('li');
-        const formattedAmount = this.web3.utils.fromWei(amount, tokenName === 'USDC' ? 'mwei' : 'ether');
         li.innerHTML = `
             <span><span class="crop-icon">🏦</span>Staked ${tokenName}</span>
-            <span>${formattedAmount} ${tokenName}</span>
+            <span>${this.formatTokenAmount(this.web3.utils.fromWei(amount, tokenName === 'USDC' ? 'mwei' : 'ether'))} ${tokenName}</span>
             <button class="unstake-btn" data-token="${tokenAddress}">Unstake</button>
             <button class="claim-btn" data-token="${tokenAddress}">Claim Rewards</button>
         `;
-        li.querySelector('.unstake-btn').addEventListener('click', () => this.unstakeTokens(tokenAddress, amount));
-        li.querySelector('.claim-btn').addEventListener('click', () => this.claimRewards(tokenAddress));
+        li.querySelector('.unstake-btn').addEventListener('click', (event) => this.unstakeTokens(tokenAddress, amount));
+        li.querySelector('.claim-btn').addEventListener('click', (event) => this.claimRewards(tokenAddress));
         cropList.appendChild(li);
     }
 
@@ -1666,12 +1666,14 @@ class CropFarmingGame {
         this.updateMarketUI();
         this.updateWeatherUI();
 
-        // Update Harvest token balance, USDC balance, and staking info every 30 seconds
+        // Update Harvest token and USDC balances every 30 seconds
         setInterval(() => {
             this.updateHarvestTokenBalance();
             this.updateUSDCBalance();
-            this.updateStakingInfo();
         }, 30000);
+
+        // Update staking info every 60 seconds
+        setInterval(() => this.updateStakingInfo(), 60000);
 
         console.log("UI initialized");
     }
