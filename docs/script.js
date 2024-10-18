@@ -5,6 +5,7 @@ class CropFarmingGame {
         console.log("Initializing CropFarmingGame");
         this.playerID = 'Not Connected';
         this.harvestBalance = 0;
+        this.usdcBalance = 0;
         this.crops = [];
         this.cropIcons = {
             'Bitcoin': '🪙',
@@ -870,6 +871,7 @@ class CropFarmingGame {
             }
         ];
         this.harvestTokenAddress = '0x051565d89b0490d4d87378F3Fe5Ca95D5aD18067';
+        this.usdcTokenAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'; // USDC token address on Ethereum mainnet
         this.marketUpdateInterval = 300000; // 5 minutes in milliseconds
         this.marketCountdown = 300;
         this.lastMarketUpdate = Date.now();
@@ -980,6 +982,7 @@ class CropFarmingGame {
                 await this.updateFarmStatus();
                 this.updateWeather();
                 await this.updateHarvestTokenBalance();
+                await this.updateUSDCBalance();
 
                 this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
                 this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
@@ -1058,6 +1061,29 @@ class CropFarmingGame {
             }
         } catch (error) {
             console.error("Error fetching Harvest token balance:", error);
+        }
+    }
+
+    async updateUSDCBalance() {
+        if (!this.web3 || !this.accounts) {
+            console.log("Web3 or accounts not available");
+            return;
+        }
+
+        try {
+            const usdcTokenContract = new this.web3.eth.Contract(this.erc20ABI, this.usdcTokenAddress);
+            const balance = await usdcTokenContract.methods.balanceOf(this.accounts[0]).call();
+            const balanceInUSDC = this.web3.utils.fromWei(balance, 'mwei'); // USDC has 6 decimals
+            console.log("USDC Balance:", balanceInUSDC);
+
+            const usdcBalanceElement = document.getElementById('usdc-balance');
+            if (usdcBalanceElement) {
+                usdcBalanceElement.textContent = balanceInUSDC;
+            } else {
+                console.error("USDC balance element not found");
+            }
+        } catch (error) {
+            console.error("Error fetching USDC balance:", error);
         }
     }
 
@@ -1387,25 +1413,18 @@ class CropFarmingGame {
         // Add staked tokens to the list
         if (this.contract && this.accounts) {
             try {
-                const stakedAmount = await this.contract.methods.stakes(this.accounts[0], this.harvestTokenAddress).call();
-                if (parseInt(stakedAmount.amount) > 0) {
-                    const li = document.createElement('li');
-                    const claimableRewards = await this.contract.methods.getClaimableRewards(this.accounts[0], this.harvestTokenAddress).call();
-                    const apy = await this.getStakingAPY();
-                    li.innerHTML = `
-                        <span><span class="crop-icon">🏦</span>Staked Harvest Tokens</span>
-                        <span>${this.web3.utils.fromWei(stakedAmount.amount, 'ether')} tokens</span>
-                        <span>Rewards: ${this.web3.utils.fromWei(claimableRewards, 'ether')} tokens</span>
-                        <span>Current APY: ${apy}%</span>
-                        <button class="unstake-btn">Unstake</button>
-                        <button class="claim-btn">Rewards</button>
-                    `;
-                    li.querySelector('.unstake-btn').addEventListener('click', () => this.unstakeHarvestTokens(stakedAmount.amount));
-                    li.querySelector('.claim-btn').addEventListener('click', () => this.claimRewards());
-                    cropList.appendChild(li);
+                const stakedHarvestAmount = await this.contract.methods.stakes(this.accounts[0], this.harvestTokenAddress).call();
+                const stakedUSDCAmount = await this.contract.methods.stakes(this.accounts[0], this.usdcTokenAddress).call();
+
+                if (parseInt(stakedHarvestAmount.amount) > 0) {
+                    this.addStakedTokenToList(cropList, 'Harvest Token', stakedHarvestAmount.amount, this.harvestTokenAddress);
+                }
+
+                if (parseInt(stakedUSDCAmount.amount) > 0) {
+                    this.addStakedTokenToList(cropList, 'USDC', stakedUSDCAmount.amount, this.usdcTokenAddress);
                 }
             } catch (error) {
-                console.error("Error fetching staked amount:", error);
+                console.error("Error fetching staked amounts:", error);
             }
         }
 
@@ -1452,6 +1471,20 @@ class CropFarmingGame {
         }
     }
 
+    addStakedTokenToList(cropList, tokenName, amount, tokenAddress) {
+        const li = document.createElement('li');
+        const formattedAmount = this.web3.utils.fromWei(amount, tokenName === 'USDC' ? 'mwei' : 'ether');
+        li.innerHTML = `
+            <span><span class="crop-icon">🏦</span>Staked ${tokenName}</span>
+            <span>${formattedAmount} ${tokenName}</span>
+            <button class="unstake-btn" data-token="${tokenAddress}">Unstake</button>
+            <button class="claim-btn" data-token="${tokenAddress}">Claim Rewards</button>
+        `;
+        li.querySelector('.unstake-btn').addEventListener('click', () => this.unstakeTokens(tokenAddress, amount));
+        li.querySelector('.claim-btn').addEventListener('click', () => this.claimRewards(tokenAddress));
+        cropList.appendChild(li);
+    }
+
     formatTokenAmount(amount) {
         if (amount === "N/A") return amount;
         const amountFloat = parseFloat(amount);
@@ -1460,84 +1493,88 @@ class CropFarmingGame {
         return amountFloat.toFixed(4); // Display up to 4 decimal places
     }
 
-    async stakeHarvestTokens(amount) {
-        console.log("Attempting to stake Harvest tokens");
+    async stakeTokens(tokenType, amount) {
+        console.log(`Attempting to stake ${tokenType} tokens`);
         if (!this.contract || !this.accounts) {
             alert("Please connect your wallet first!");
             return;
         }
         try {
-            const amountInWei = this.web3.utils.toWei(amount.toString(), 'ether');
-            const harvestTokenContract = new this.web3.eth.Contract(this.erc20ABI, this.harvestTokenAddress);
+            const tokenAddress = tokenType === 'usdc' ? this.usdcTokenAddress : this.harvestTokenAddress;
+            const decimals = tokenType === 'usdc' ? 6 : 18;
+            const amountInSmallestUnit = this.web3.utils.toWei(amount.toString(), tokenType === 'usdc' ? 'mwei' : 'ether');
+            const tokenContract = new this.web3.eth.Contract(this.erc20ABI, tokenAddress);
             
             console.log("Approving token transfer...");
-            // First, approve the contract to spend tokens
-            const approvalResult = await harvestTokenContract.methods.approve(this.contractAddress, amountInWei).send({ from: this.accounts[0] });
+            const approvalResult = await tokenContract.methods.approve(this.contractAddress, amountInSmallestUnit).send({ from: this.accounts[0] });
             console.log("Approval result:", approvalResult);
 
             if (approvalResult.status) {
                 console.log("Approval successful, now staking...");
-                // Then, stake the tokens
-                const result = await this.contract.methods.stake(this.harvestTokenAddress, amountInWei).send({ from: this.accounts[0] });
+                const result = await this.contract.methods.stake(tokenAddress, amountInSmallestUnit).send({ from: this.accounts[0] });
                 
                 if (result.status) {
-                    console.log(`${amount} Harvest tokens staked successfully!`);
-                    alert(`${amount} Harvest tokens staked successfully! Transaction hash: ${result.transactionHash}`);
+                    console.log(`${amount} ${tokenType.toUpperCase()} tokens staked successfully!`);
+                    alert(`${amount} ${tokenType.toUpperCase()} tokens staked successfully! Transaction hash: ${result.transactionHash}`);
                     await this.updateFarmStatus();
                     await this.updateHarvestTokenBalance();
+                    await this.updateUSDCBalance();
                 } else {
-                    console.error("Failed to stake Harvest tokens");
-                    alert("Failed to stake Harvest tokens. Please try again.");
+                    console.error(`Failed to stake ${tokenType.toUpperCase()} tokens`);
+                    alert(`Failed to stake ${tokenType.toUpperCase()} tokens. Please try again.`);
                 }
             } else {
                 console.error("Failed to approve token transfer");
                 alert("Failed to approve token transfer. Please try again.");
             }
         } catch (error) {
-            console.error("Error staking Harvest tokens:", error);
-            alert(`Failed to stake Harvest tokens: ${error.message}`);
+            console.error(`Error staking ${tokenType.toUpperCase()} tokens:`, error);
+            alert(`Failed to stake ${tokenType.toUpperCase()} tokens: ${error.message}`);
         }
     }
 
-    async unstakeHarvestTokens(amount) {
-        console.log("Attempting to unstake Harvest tokens");
+    async unstakeTokens(tokenAddress, amount) {
+        console.log(`Attempting to unstake tokens from address ${tokenAddress}`);
         if (!this.contract || !this.accounts) {
             alert("Please connect your wallet first!");
             return;
         }
         try {
-            const result = await this.contract.methods.unstake(this.harvestTokenAddress, amount).send({ from: this.accounts[0] });
+            const result = await this.contract.methods.unstake(tokenAddress, amount).send({ from: this.accounts[0] });
             
             if (result.status) {
-                const unstakedAmount = this.web3.utils.fromWei(amount, 'ether');
-                console.log(`${unstakedAmount} Harvest tokens unstaked successfully!`);
-                alert(`${unstakedAmount} Harvest tokens unstaked successfully! Transaction hash: ${result.transactionHash}`);
+                const tokenType = tokenAddress === this.usdcTokenAddress ? 'USDC' : 'Harvest Token';
+                const unstakedAmount = this.web3.utils.fromWei(amount, tokenType === 'USDC' ? 'mwei' : 'ether');
+                console.log(`${unstakedAmount} ${tokenType} unstaked successfully!`);
+                alert(`${unstakedAmount} ${tokenType} unstaked successfully! Transaction hash: ${result.transactionHash}`);
                 await this.updateFarmStatus();
                 await this.updateHarvestTokenBalance();
+                await this.updateUSDCBalance();
             } else {
-                console.error("Failed to unstake Harvest tokens");
-                alert("Failed to unstake Harvest tokens. Please try again.");
+                console.error("Failed to unstake tokens");
+                alert("Failed to unstake tokens. Please try again.");
             }
         } catch (error) {
-            console.error("Error unstaking Harvest tokens:", error);
-            alert(`Failed to unstake Harvest tokens: ${error.message}`);
+            console.error("Error unstaking tokens:", error);
+            alert(`Failed to unstake tokens: ${error.message}`);
         }
     }
 
-    async claimRewards() {
-        console.log("Attempting to claim rewards");
+    async claimRewards(tokenAddress) {
+        console.log(`Attempting to claim rewards for token address ${tokenAddress}`);
         if (!this.contract || !this.accounts) {
             alert("Please connect your wallet first!");
             return;
         }
         try {
-            const result = await this.contract.methods.claimRewards(this.harvestTokenAddress).send({ from: this.accounts[0] });
+            const result = await this.contract.methods.claimRewards(tokenAddress).send({ from: this.accounts[0] });
             
             if (result.status) {
                 console.log("Rewards claimed successfully!");
                 alert("Rewards claimed successfully!");
                 await this.updateFarmStatus();
                 await this.updateHarvestTokenBalance();
+                await this.updateUSDCBalance();
             } else {
                 console.error("Failed to claim rewards");
                 alert("Failed to claim rewards. Please try again.");
@@ -1548,7 +1585,7 @@ class CropFarmingGame {
         }
     }
 
-    async getStakingAPY() {
+    async getStakingAPY(tokenAddress) {
         if (!this.contract || !this.accounts) return "N/A";
         try {
             const rewardRate = await this.contract.methods.rewardRate().call();
@@ -1557,6 +1594,27 @@ class CropFarmingGame {
         } catch (error) {
             console.error("Error fetching staking APY:", error);
             return "N/A";
+        }
+    }
+
+    async updateStakingInfo() {
+        const harvestStakingAPY = await this.getStakingAPY(this.harvestTokenAddress);
+        const usdcStakingAPY = await this.getStakingAPY(this.usdcTokenAddress);
+
+        document.getElementById('harvest-staking-apy').textContent = `${harvestStakingAPY}%`;
+        document.getElementById('usdc-staking-apy').textContent = `${usdcStakingAPY}%`;
+
+        // Update staked balances
+        if (this.contract && this.accounts) {
+            try {
+                const stakedHarvest = await this.contract.methods.stakes(this.accounts[0], this.harvestTokenAddress).call();
+                const stakedUSDC = await this.contract.methods.stakes(this.accounts[0], this.usdcTokenAddress).call();
+
+                document.getElementById('staked-harvest-token-balance').textContent = this.web3.utils.fromWei(stakedHarvest.amount, 'ether');
+                document.getElementById('staked-usdc-balance').textContent = this.web3.utils.fromWei(stakedUSDC.amount, 'mwei');
+            } catch (error) {
+                console.error("Error fetching staked balances:", error);
+            }
         }
     }
 
@@ -1587,29 +1645,33 @@ class CropFarmingGame {
             console.error("Harvest button not found");
         }
         const stakeBtn = document.getElementById('stake-btn');
-        if (stakeBtn) {
-            stakeBtn.addEventListener('click', () => {
-                const amount = document.getElementById('token-amount').value;
-                this.stakeHarvestTokens(amount);
-            });
-        } else {
-            console.error("Stake button not found");
-        }
         const unstakeBtn = document.getElementById('unstake-btn');
-        if (unstakeBtn) {
-            unstakeBtn.addEventListener('click', () => {
+        const tokenSelect = document.getElementById('token-select');
+        if (stakeBtn && unstakeBtn && tokenSelect) {
+            stakeBtn.addEventListener('click', () => {
+                const tokenType = tokenSelect.value;
                 const amount = document.getElementById('token-amount').value;
-                this.unstakeHarvestTokens(amount);
+                this.stakeTokens(tokenType, amount);
+            });
+            unstakeBtn.addEventListener('click', () => {
+                const tokenType = tokenSelect.value;
+                const amount = document.getElementById('token-amount').value;
+                const tokenAddress = tokenType === 'usdc' ? this.usdcTokenAddress : this.harvestTokenAddress;
+                this.unstakeTokens(tokenAddress, this.web3.utils.toWei(amount, tokenType === 'usdc' ? 'mwei' : 'ether'));
             });
         } else {
-            console.error("Unstake button not found");
+            console.error("Stake/Unstake buttons or token select not found");
         }
         this.updateCropTypes();
         this.updateMarketUI();
         this.updateWeatherUI();
 
-        // Update Harvest token balance every 30 seconds
-        setInterval(() => this.updateHarvestTokenBalance(), 30000);
+        // Update Harvest token balance, USDC balance, and staking info every 30 seconds
+        setInterval(() => {
+            this.updateHarvestTokenBalance();
+            this.updateUSDCBalance();
+            this.updateStakingInfo();
+        }, 30000);
 
         console.log("UI initialized");
     }
