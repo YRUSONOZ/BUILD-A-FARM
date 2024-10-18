@@ -284,24 +284,28 @@
             <section id="token-actions">
                 <h2><i class="fas fa-coins"></i> Token Actions</h2>
                 <div class="token-action-controls">
+                    <select id="token-select">
+                        <option value="harvest">Harvest Token</option>
+                        <option value="usdc">USDC</option>
+                    </select>
                     <input type="number" id="token-amount" placeholder="Amount" min="0" step="0.01">
                     <button id="stake-btn">Stake</button>
                     <button id="unstake-btn">Unstake</button>
                 </div>
                 <div id="token-balances">
                     <p>Harvest Token Balance: <span id="harvest-token-balance">0</span></p>
+                    <p>USDC Balance: <span id="usdc-balance">0</span></p>
                     <p>Staked Harvest Tokens: <span id="staked-harvest-token-balance">0</span></p>
-                    <p>Current Staking APY: <span id="staking-apy">N/A</span></p>
+                    <p>Staked USDC: <span id="staked-usdc-balance">0</span></p>
+                    <p>Current Harvest Token Staking APY: <span id="harvest-staking-apy">N/A</span></p>
+                    <p>Current USDC Staking APY: <span id="usdc-staking-apy">N/A</span></p>
                 </div>
             </section>
             <section id="farm-actions">
                 <h2><i class="fas fa-tractor"></i> Farm Actions</h2>
                 <div class="action-controls">
                     <select id="crop-select">
-                        <div id="token-balances">
-    <p>Harvest Token Balance: <span id="harvest-token-balance">0</span></p>
-    <p>Staked Harvest Tokens: <span id="staked-harvest-token-balance">0</span></p>
-</div>                        <!-- Crop options will be inserted here by JavaScript -->
+                        <!-- Crop options will be inserted here by JavaScript -->
                     </select>
                     <button id="plant-btn"><i class="fas fa-plus"></i> Plant</button>
                 </div>
