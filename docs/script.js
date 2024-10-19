@@ -993,9 +993,9 @@ class CropFarmingGame {
                 this.playerID = this.accounts[0];
                 this.updateWalletUI();
                 await this.updateTokenBalances();
+                this.updateSelectedTokenBalance();
                 await this.updateFarmStatus();
                 this.updateWeather();
-                this.updateSelectedTokenBalance();
 
                 // Set up intervals for updates
                 this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
@@ -1095,6 +1095,11 @@ class CropFarmingGame {
         const stakedBalanceElement = document.getElementById('staked-token-balance');
         const apyElement = document.getElementById('token-staking-apy');
 
+        console.log("Token select element:", tokenSelect);
+        console.log("Balance element:", balanceElement);
+        console.log("Staked balance element:", stakedBalanceElement);
+        console.log("APY element:", apyElement);
+
         if (!tokenSelect || !balanceElement) {
             console.error("Token select or balance element not found");
             return;
@@ -1102,14 +1107,6 @@ class CropFarmingGame {
 
         const selectedToken = tokenSelect.value;
         console.log("Selected token:", selectedToken);
-
-        // Update the label to "Wallet Balance"
-        const balanceLabel = document.querySelector('label[for="selected-token-balance"]');
-        if (balanceLabel) {
-            balanceLabel.textContent = 'Wallet Balance:';
-        } else {
-            console.error("Balance label element not found");
-        }
 
         // Display the wallet balance for the selected token
         const walletBalance = this.tokenBalances[selectedToken];
