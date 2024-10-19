@@ -526,11 +526,11 @@ class CropFarmingGame {
                             }
                         ],
                         "internalType": "struct CryptoFarming.Crop[]",
-                        "name": "",
-                        "type": "tuple[]"
-                    },
-                    {
-                        "internalType": "uint256",
+                "name": "",
+                "type": "tuple[]"
+            },
+            {
+                "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
             }
@@ -969,7 +969,7 @@ class CropFarmingGame {
                 // Set up the game state
                 this.playerID = this.accounts[0];
                 this.updateWalletUI();
-                await this.updateTokenBalances(); // Add this line
+                await this.updateTokenBalances();
                 await this.updateFarmStatus();
                 this.updateWeather();
                 this.updateSelectedTokenBalance();
