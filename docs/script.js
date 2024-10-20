@@ -1045,6 +1045,9 @@ class CropFarmingGame {
             this.tokenBalances.usdc = this.web3.utils.fromWei(usdcBalance, 'mwei'); // USDC has 6 decimals
 
             console.log("Token balances updated:", this.tokenBalances);
+            console.log("Harvest balance:", this.tokenBalances.harvest);
+            console.log("USDC balance:", this.tokenBalances.usdc);
+
             this.updateSelectedTokenBalance();
         } catch (error) {
             console.error("Error updating token balances:", error);
