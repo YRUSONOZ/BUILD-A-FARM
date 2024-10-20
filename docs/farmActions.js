@@ -85,7 +85,11 @@ export class FarmActions {
             console.error("Crop list element not found");
             return;
         }
+
+        // Clear existing content
         cropList.innerHTML = '';
+
+        const stakedTokens = [];
 
         // Add staked tokens to the list
         if (this.game.contract && this.game.accounts) {
@@ -95,19 +99,24 @@ export class FarmActions {
 
                 if (parseInt(stakedHarvest.amount) > 0) {
                     const harvestRewards = await this.game.contract.methods.getClaimableRewards(this.game.accounts[0], this.game.harvestTokenAddress).call();
-                    this.game.addStakedTokenToList(cropList, 'Harvest Token', stakedHarvest.amount, this.game.harvestTokenAddress, harvestRewards);
+                    stakedTokens.push({name: 'Harvest Token', amount: stakedHarvest.amount, address: this.game.harvestTokenAddress, rewards: harvestRewards});
                 }
 
                 if (parseInt(stakedUSDC.amount) > 0) {
                     const usdcRewards = await this.game.contract.methods.getClaimableRewards(this.game.accounts[0], this.game.usdcTokenAddress).call();
-                    this.game.addStakedTokenToList(cropList, 'USDC', stakedUSDC.amount, this.game.usdcTokenAddress, usdcRewards);
+                    stakedTokens.push({name: 'USDC', amount: stakedUSDC.amount, address: this.game.usdcTokenAddress, rewards: usdcRewards});
                 }
             } catch (error) {
                 console.error("Error fetching staked amounts and rewards:", error);
             }
         }
 
-        if (this.game.crops.length === 0 && cropList.children.length === 0) {
+        // Add staked tokens to the list
+        for (const token of stakedTokens) {
+            this.game.addStakedTokenToList(cropList, token.name, token.amount, token.address, token.rewards);
+        }
+
+        if (this.game.crops.length === 0 && stakedTokens.length === 0) {
             cropList.innerHTML = '<li>No crops planted or tokens staked yet.</li>';
         } else {
             for (let index = 0; index < this.game.crops.length; index++) {
