@@ -71,218 +71,79 @@ class CropFarmingGame {
         this.startMarketFluctuations();
         console.log("CropFarmingGame initialization complete");
     }
-    // Contract ABI
-        this.contractABI = [
-            {
-                "inputs": [],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "farmer",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint8",
-                        "name": "cropType",
-                        "type": "uint8"
-                    }
-                ],
-                "name": "CropPlanted",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "farmer",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "CropsHarvested",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "previousOwner",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "newOwner",
-                        "type": "address"
-                    }
-                ],
-                "name": "OwnershipTransferred",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "farmer",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "plotId",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "PlotPurchased",
-                "type": "event"
-            },
-            {
-                "inputs": [],
-                "name": "getCurrentWeather",
-                "outputs": [
-                    {
-                        "internalType": "enum CryptoFarming.Weather",
-                        "name": "",
-                        "type": "uint8"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_farmer",
-                        "type": "address"
-                    }
-                ],
-                "name": "getFarmStatus",
-                "outputs": [
-                    {
-                        "components": [
-                            {
-                                "internalType": "uint8",
-                                "name": "cropType",
-                                "type": "uint8"
-                            },
-                            {
-                                "internalType": "uint40",
-                                "name": "plantTime",
-                                "type": "uint40"
-                            },
-                            {
-                                "internalType": "uint40",
-                                "name": "maturityTime",
-                                "type": "uint40"
-                            },
-                            {
-                                "internalType": "uint168",
-                                "name": "baseReward",
-                                "type": "uint168"
-                            }
-                        ],
-                        "internalType": "struct CryptoFarming.Crop[]",
-                        "name": "",
-                        "type": "tuple[]"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "yieldBoostMultiplier",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "harvestCrops",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "uint8",
-                        "name": "_cropType",
-                        "type": "uint8"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "growthSpeedMultiplier",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "plantCrop",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "purchasePlot",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }
-        ];
+    import UpgradeSystem from './upgrades.js';
+import { TokenActions } from './tokenActions.js';
+import { FarmActions } from './farmActions.js';
+import { PlotSystem } from './plots.js';
 
-        // ERC20 ABI
-        this.erc20ABI = [
-            {
-                "constant": true,
-                "inputs": [{"name": "_owner", "type": "address"}],
-                "name": "balanceOf",
-                "outputs": [{"name": "balance", "type": "uint256"}],
-                "type": "function"
-            },
-            {
-                "constant": false,
-                "inputs": [
-                    {"name": "_spender", "type": "address"},
-                    {"name": "_value", "type": "uint256"}
-                ],
-                "name": "approve",
-                "outputs": [{"name": "", "type": "bool"}],
-                "type": "function"
-            },
-            {
-                "constant": false,
-                "inputs": [
-                    {"name": "_to", "type": "address"},
-                    {"name": "_value", "type": "uint256"}
-                ],
-                "name": "transfer",
-                "outputs": [{"name": "", "type": "bool"}],
-                "type": "function"
-            }
+class CropFarmingGame {
+    constructor() {
+        console.log("Initializing CropFarmingGame");
+        this.playerID = 'Not Connected';
+        this.harvestBalance = 0;
+        this.usdcBalance = 0;
+        this.crops = [];
+        this.cropIcons = {
+            'Bitcoin': '🪙',
+            'Ethereum': '💎',
+            'Dogecoin': '🐶'
+        };
+        this.cropTypes = [
+            { name: "Bitcoin", baseGrowthTime: 300, baseReward: 50, basePlantCost: 10 },
+            { name: "Ethereum", baseGrowthTime: 180, baseReward: 30, basePlantCost: 5 },
+            { name: "Dogecoin", baseGrowthTime: 60, baseReward: 10, basePlantCost: 1 },
         ];
+        this.marketPrices = {};
+        this.contractAddress = '0x5A5959A318FbD06e536A91f37874f0920232439D';
+        this.harvestTokenAddress = '0x051565d89b0490d4d87378F3Fe5Ca95D5aD18067';
+        this.usdcTokenAddress = '0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8';
+        this.marketUpdateInterval = 300000;
+        this.marketCountdown = 300;
+        this.lastMarketUpdate = Date.now();
+        this.weatherIcons = {
+            0: '☀️', 1: '🌧️', 2: '🏜️', 3: '❄️'
+        };
+        this.weatherEffects = {
+            0: 'Growth speed +20%',
+            1: 'Yield +20%',
+            2: 'Growth speed -20%',
+            3: 'Yield -20%'
+        };
+        this.currentWeather = 0;
+        this.weatherCheckInterval = 30;
+        this.cropUpdateInterval = null;
+
+        // Initialize token balances
+        this.tokenBalances = {
+            harvest: 0,
+            usdc: 0
+        };
+
+        console.log("Initializing systems...");
+        
+        // Initialize systems in the correct order
+        try {
+            this.upgradeSystem = new UpgradeSystem(this);
+            console.log("UpgradeSystem initialized");
+            
+            this.tokenActions = new TokenActions(this);
+            console.log("TokenActions initialized:", this.tokenActions);
+            
+            this.farmActions = new FarmActions(this);
+            console.log("FarmActions initialized");
+            
+            this.plotSystem = new PlotSystem(this);
+            console.log("PlotSystem initialized");
+        } catch (error) {
+            console.error("Error during system initialization:", error);
+        }
+
+        // Initialize game features
+        this.initializeMarketPrices();
+        this.initializeUI();
+        this.startMarketFluctuations();
+        console.log("CropFarmingGame initialization complete");
+    }
     async connectWallet() {
         console.log("Attempting to connect wallet");
         if (typeof window.ethereum !== 'undefined') {
