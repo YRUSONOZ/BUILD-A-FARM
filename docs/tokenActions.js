@@ -3,78 +3,56 @@ export class TokenActions {
         this.game = game;
     }
 
-    async updateTokenBalances() {
-        if (!this.game.web3 || !this.game.accounts) {
-            console.log("Web3 or accounts not available");
-            return;
-        }
+    updateSelectedTokenBalance() {
+    console.log("Updating selected token balance");
+    const tokenSelect = document.getElementById('token-select');
+    const balanceElement = document.getElementById('wallet-token-balance');
+    const stakedBalanceElement = document.getElementById('staked-token-balance');
+    const apyElement = document.getElementById('token-staking-apy');
 
-        try {
-            const harvestTokenContract = new this.game.web3.eth.Contract(this.game.erc20ABI, this.game.harvestTokenAddress);
-            const usdcTokenContract = new this.game.web3.eth.Contract(this.game.erc20ABI, this.game.usdcTokenAddress);
-
-            const harvestBalance = await harvestTokenContract.methods.balanceOf(this.game.accounts[0]).call();
-            const usdcBalance = await usdcTokenContract.methods.balanceOf(this.game.accounts[0]).call();
-
-            this.game.tokenBalances.harvest = this.game.web3.utils.fromWei(harvestBalance, 'ether');
-            this.game.tokenBalances.usdc = this.game.web3.utils.fromWei(usdcBalance, 'mwei'); // USDC has 6 decimals
-
-            console.log("Token balances updated:", this.game.tokenBalances);
-            console.log("Harvest balance:", this.game.tokenBalances.harvest);
-            console.log("USDC balance:", this.game.tokenBalances.usdc);
-
-            this.updateSelectedTokenBalance();
-        } catch (error) {
-            console.error("Error updating token balances:", error);
-        }
+    if (!tokenSelect || !balanceElement) {
+        console.error("Token select or balance element not found");
+        return;
     }
 
-    updateSelectedTokenBalance() {
-        console.log("Updating selected token balance");
-        const tokenSelect = document.getElementById('token-select');
-        const balanceElement = document.getElementById('wallet-token-balance');
-        const stakedBalanceElement = document.getElementById('staked-token-balance');
-        const apyElement = document.getElementById('token-staking-apy');
+    const selectedToken = tokenSelect.value;
+    console.log("Selected token:", selectedToken);
 
-        if (!tokenSelect || !balanceElement) {
-            console.error("Token select or balance element not found");
-            return;
-        }
+    // Update wallet balance
+    balanceElement.textContent = this.game.formatTokenAmount(this.game.tokenBalances[selectedToken]);
 
-        const selectedToken = tokenSelect.value;
-        console.log("Selected token:", selectedToken);
+    // Set default values for staking info
+    if (stakedBalanceElement) {
+        stakedBalanceElement.textContent = '0';
+    }
+    if (apyElement) {
+        apyElement.textContent = 'N/A';
+    }
 
-        balanceElement.textContent = this.game.formatTokenAmount(this.game.tokenBalances[selectedToken]);
+    // Skip staking checks if contract isn't properly initialized
+    if (!this.game.contract || !this.game.accounts) {
+        return;
+    }
 
-        // Set default values for staking info
-        if (stakedBalanceElement) {
-            stakedBalanceElement.textContent = '0';
-        }
-        if (apyElement) {
-            apyElement.textContent = 'N/A';
-        }
-
-        // Only try to get staking info if contract is available and has the stakes method
-        if (this.game.contract && this.game.accounts && this.game.contract.methods.stakes) {
+    try {
+        // Only try to get staking info if the contract has the stakes method
+        if (this.game.contract.methods.stakes) {
             const tokenAddress = selectedToken === 'usdc' ? this.game.usdcTokenAddress : this.game.harvestTokenAddress;
             this.game.contract.methods.stakes(this.game.accounts[0], tokenAddress).call()
                 .then(stake => {
-                    const stakedAmount = this.game.web3.utils.fromWei(stake.amount, selectedToken === 'usdc' ? 'mwei' : 'ether');
-                    if (stakedBalanceElement) {
+                    if (stake && stakedBalanceElement) {
+                        const stakedAmount = this.game.web3.utils.fromWei(stake.amount, selectedToken === 'usdc' ? 'mwei' : 'ether');
                         stakedBalanceElement.textContent = this.game.formatTokenAmount(stakedAmount);
-                    }
-                    return this.getStakingAPY(tokenAddress);
-                })
-                .then(apy => {
-                    if (apyElement) {
-                        apyElement.textContent = `${apy}%`;
                     }
                 })
                 .catch(error => {
                     console.log("Staking info not available:", error);
                 });
         }
+    } catch (error) {
+        console.log("Error checking staking info:", error);
     }
+}
 
     async stakeTokens(tokenType, amount) {
         if (!this.game.contract || !this.game.accounts) {
