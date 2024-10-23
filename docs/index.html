@@ -1,203 +1,369 @@
-<div id="game-container">
-    <div>
-        <h1>Crypto Farming Simulator</h1>
-        
-        <div id="player-info">
-            <span id="player-id">
-                <button id="connect-wallet-btn">Connect Wallet</button>
-            </span>
-            <span id="player-balance">0 tokens</span>
-            <button id="disconnect-wallet-btn" style="display: none;">Disconnect Wallet</button>
-        </div>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGORA MARKETS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6200ea;
+            --secondary-color: #00c853;
+            --background-color: #e8eaf6;
+            --text-color: #333;
+            --card-background: #ffffff;
+            --header-gradient: linear-gradient(135deg, #6200ea, #3700b3);
+        }
 
-    <main role="main">
-        <div class="info-container">
-            <div id="weather-container" class="section">
-                <!-- Weather info will be dynamically inserted -->
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        #game-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background-color: var(--card-background);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--header-gradient);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #player-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        #player-info span {
+            margin-bottom: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        main {
+            padding: 2rem;
+            background-color: #f0f4fc;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+            font-weight: 600;
+        }
+
+        .info-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            gap: 2rem;
+        }
+
+        #weather-container, #market-prices {
+            background-color: var(--card-background);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 48%;
+            text-align: center;
+        }
+
+        #market-prices {
+            overflow: hidden;
+            text-align: center;
+        }
+
+        #market-countdown {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        #market-prices-scroll {
+            white-space: nowrap;
+            display: inline-block;
+            padding-left: 100%;
+            animation: scroll-left 30s linear infinite;
+        }
+
+        @keyframes scroll-left {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        #market-prices-scroll:hover {
+            animation-play-state: paused;
+        }
+
+        #market-prices-scroll span {
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+        #plots-section, #upgrades, #token-actions {
+            background-color: var(--card-background);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .token-action-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        button, select, input[type="number"] {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: #00a844;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        select, input[type="number"] {
+            flex-grow: 1;
+            background-color: white;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 400;
+        }
+
+        .plots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .plot {
+            background-color: var(--card-background);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .plot:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .plot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .plot-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .crops-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .crop {
+            background: var(--background-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .crop.ready {
+            background: #e8f5e9;
+            border: 1px solid var(--secondary-color);
+        }
+
+        .crop-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .crop-status {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .crop-reward {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .plot-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .plot-controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        #connect-wallet-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        #connect-wallet-btn:hover {
+            background-color: #3700b3;
+            transform: translateY(-2px);
+        }
+
+        #disconnect-wallet-btn {
+            background-color: #ff4444;
+            display: none;
+        }
+
+        #disconnect-wallet-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .connected #connect-wallet-btn {
+            display: none;
+        }
+
+        .upgrade-item {
+            background-color: #e8f5e9;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .upgrade-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1><i class="fas fa-seedling"></i> Crypto Farming Simulator</h1>
+            <div id="player-info">
+                <span id="player-id"><button id="connect-wallet-btn">Connect Wallet</button></span>
+                <span id="player-balance"><i class="fas fa-coins"></i> 0 tokens</span>
+                <button id="disconnect-wallet-btn">Disconnect Wallet</button>
+            </div>
+        </header>
+        <main>
+            <div class="info-container">
+                <section id="weather-container">
+                    <!-- Weather information will be inserted here by JavaScript -->
+                </section>
+                <section id="market-prices">
+                    <h3>Current Market Prices</h3>
+                    <div id="market-countdown">Next update in: 30s</div>
+                    <div id="market-prices-scroll">
+                        <!-- Market prices will be inserted here by JavaScript -->
+                    </div>
+                </section>
             </div>
 
-            <div id="market-prices" class="section">
-                <h3>Current Market Prices</h3>
-                <div id="market-countdown">Next update in: 30s</div>
-                <div id="market-prices-scroll">
-                    <!-- Market prices will be dynamically inserted -->
+            <section id="token-actions">
+                <h2><i class="fas fa-coins"></i> Token Actions</h2>
+                <div class="token-action-controls">
+                    <select id="token-select">
+                        <option value="harvest">Harvest Token</option>
+                        <option value="usdc">USDC</option>
+                    </select>
+                    <input type="number" id="token-amount" placeholder="Amount" min="0" step="0.01">
+                    <button id="stake-btn">Stake</button>
+                    <button id="unstake-btn">Unstake</button>
                 </div>
-            </div>
-        </div>
+                <div id="token-balances">
+                    <p>Wallet Balance: <span id="wallet-token-balance">0</span></p>
+                    <p>Staked Balance: <span id="staked-token-balance">0</span></p>
+                    <p>Current Staking APY: <span id="token-staking-apy">N/A</span></p>
+                </div>
+            </section>
 
-        <div id="token-actions" class="section">
-            <h2>Token Actions</h2>
-            <div class="token-action-controls">
-                <select id="token-select">
-                    <option value="harvest">Harvest Token</option>
-                    <option value="usdc">USDC</option>
-                </select>
-                <input type="number" id="token-amount" placeholder="Amount" min="0" step="0.1">
-                <button id="stake-btn">Stake</button>
-                <button id="unstake-btn">Unstake</button>
-            </div>
-            <div id="token-balances">
-                <p>Wallet Balance: <span id="wallet-token-balance">0</span></p>
-                <p>Staked Balance: <span id="staked-token-balance">0</span></p>
-                <p>Current Staking APY: <span id="token-staking-apy">N/A</span></p>
-            </div>
-        </div>
+            <section id="plots-section">
+                <h2><i class="fas fa-tractor"></i> Your Farm</h2>
+                <div class="plot-controls">
+                    <select id="crop-select">
+                        <!-- Crop options will be inserted here by JavaScript -->
+                    </select>
+                </div>
+                <div id="plots-container" class="plots-grid">
+                    <!-- Plots will be dynamically inserted here -->
+                </div>
+                <div class="plot-controls">
+                    <button id="purchase-plot-btn" class="action-button">
+                        <i class="fas fa-plus"></i> Purchase New Plot (100 HARV)
+                    </button>
+                </div>
+            </section>
 
-        <div id="plots-section" class="section">
-            <h2>Your Farm Plots</h2>
-            <div class="plot-actions">
-                <select id="crop-select">
-                    <option value="Bitcoin">Bitcoin (5m growth, 50 HARV reward)</option>
-                    <option value="Ethereum">Ethereum (3m growth, 30 HARV reward)</option>
-                    <option value="Dogecoin">Dogecoin (1m growth, 10 HARV reward)</option>
-                </select>
-                <button id="plant-btn">Plant</button>
-                <button id="harvest-btn">Harvest All Mature Crops</button>
-            </div>
-            <div id="plots-container" class="plots-grid">
-                <!-- Plots will be dynamically inserted here -->
-            </div>
-            <div class="plot-controls">
-                <button id="purchase-plot-btn" class="action-button">Purchase New Plot (100 HARV)</button>
-            </div>
-        </div>
-
-        <div id="farm-status" class="section">
-            <h2>Your Farm Activity</h2>
-            <ul id="crop-list">
-                <!-- Crop list will be dynamically inserted -->
-            </ul>
-        </div>
-
-        <div id="upgrades" class="section">
-            <h2>Farm Upgrades</h2>
-            <div id="upgrade-container">
-                <!-- Upgrades will be dynamically inserted -->
-            </div>
-        </div>
-    </main>
-</div>
-
-<style>
-    .plots-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 1rem;
-        padding: 1rem;
-    }
-
-    .plot {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        padding: 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .plot:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .plot-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .crops-container {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .crop {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 4px;
-        padding: 0.5rem;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .crop.ready {
-        background: rgba(0, 255, 0, 0.1);
-        border: 1px solid rgba(0, 255, 0, 0.2);
-    }
-
-    .crop-icon {
-        font-size: 1.5rem;
-    }
-
-    .crop-status {
-        font-size: 0.9rem;
-        color: #ccc;
-    }
-
-    .crop-reward {
-        font-size: 0.8rem;
-        color: #4CAF50;
-    }
-
-    .plot-actions {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .plot-controls {
-        display: flex;
-        justify-content: center;
-        margin-top: 1rem;
-    }
-
-    .action-button {
-        background: #4CAF50;
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-    }
-
-    .action-button:hover {
-        background: #45a049;
-    }
-
-    .action-button:disabled {
-        background: #cccccc;
-        cursor: not-allowed;
-    }
-
-    select, button {
-        padding: 0.5rem;
-        border-radius: 4px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-    }
-
-    select {
-        max-width: 200px;
-    }
-
-    button {
-        cursor: pointer;
-        transition: background 0.3s ease;
-    }
-
-    button:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.2);
-    }
-</style>
-
-<script type="module" src="script.js"></script>
-<script type="module" src="upgrades.js"></script>
-<script type="module" src="tokenActions.js"></script>
-<script type="module" src="farmActions.js"></script>
-<script type="module" src="plots.js"></script>
+            <section id="upgrades">
+                <h2><i class="fas fa-arrow-up"></i> Farm Upgrades</h2>
+                <div id="upgrade-container">
+                    <!-- Upgrades will be dynamically inserted -->
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script type="module">
+        import game from './script.js';
+        window.game = game;  // Make game accessible globally if needed
+    </script>
+</body>
+</html>
