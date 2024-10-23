@@ -439,62 +439,59 @@ class CropFarmingGame {
     }
 
     async connectWallet() {
-        console.log("Attempting to connect wallet");
-        if (typeof window.ethereum !== 'undefined') {
-            try {
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                console.log("Accounts received:", accounts);
-                
-                this.web3 = new Web3(window.ethereum);
-                this.accounts = accounts;
+    console.log("Attempting to connect wallet");
+    if (typeof window.ethereum !== 'undefined') {
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            console.log("Accounts received:", accounts);
+            
+            this.web3 = new Web3(window.ethereum);
+            this.accounts = accounts;
 
-                const networkId = await this.web3.eth.net.getId();
-                console.log("Network ID:", networkId);
-                const sepoliaTestnetId = 11155111;
-                if (networkId !== sepoliaTestnetId) {
-                    alert('Please connect to the Sepolia testnet in MetaMask');
-                    return;
-                }
-
-                try {
-                    this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
-                    console.log("Contract initialized:", this.contract);
-                    console.log("Contract address:", this.contractAddress);
-                    
-                    if (!this.contract.methods) {
-                        throw new Error("Contract methods not found");
-                    }
-
-                    this.playerID = this.accounts[0];
-                    this.updateWalletUI();
-                    await this.updateFarmStatus();
-                    this.updateWeather();
-                    await this.tokenActions.updateTokenBalances();
-                    this.tokenActions.updateSelectedTokenBalance();
-
-                    // Initialize plot system after wallet connection
-                    await this.plotSystem.initializePlots();
-                    this.plotSystem.startCropUpdates();
-
-                    this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
-                    this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
-                    this.tokenBalanceInterval = setInterval(() => this.tokenActions.updateTokenBalances(), 30000);
-                    
-                    console.log("Wallet connected successfully");
-                } catch (contractError) {
-                    console.error("Error initializing contract:", contractError);
-                    alert("Failed to initialize contract. Please check if you're connected to the correct network and the contract address is correct.");
-                    return;
-                }
-            } catch (error) {
-                console.error("Detailed wallet connection error:", error);
-                alert(`Failed to connect wallet: ${error.message}. Please check the console for more details and try again.`);
+            const networkId = await this.web3.eth.net.getId();
+            console.log("Network ID:", networkId);
+            const sepoliaTestnetId = 11155111;
+            if (networkId !== sepoliaTestnetId) {
+                alert('Please connect to the Sepolia testnet in MetaMask');
+                return;
             }
-        } else {
-            console.error("Ethereum wallet not found");
-            alert("Please install MetaMask to use this dApp!");
+
+            try {
+                this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
+                console.log("Contract initialized:", this.contract);
+                
+                // Update UI first
+                this.playerID = this.accounts[0];
+                this.updateWalletUI();
+                
+                // Initialize token contracts
+                await this.tokenActions.updateTokenBalances();
+                
+                // Update game state
+                await this.updateWeather();
+                await this.plotSystem.initializePlots();
+                this.plotSystem.startCropUpdates();
+
+                // Set up intervals
+                this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
+                this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
+                this.tokenBalanceInterval = setInterval(() => this.tokenActions.updateTokenBalances(), 30000);
+                
+                console.log("Wallet connected successfully");
+            } catch (contractError) {
+                console.error("Error initializing contract:", contractError);
+                alert("Failed to initialize contract. Please check if you're connected to the correct network and the contract address is correct.");
+                return;
+            }
+        } catch (error) {
+            console.error("Detailed wallet connection error:", error);
+            alert(`Failed to connect wallet: ${error.message}. Please check the console for more details and try again.`);
         }
+    } else {
+        console.error("Ethereum wallet not found");
+        alert("Please install MetaMask to use this dApp!");
     }
+}
 
     disconnectWallet() {
         console.log("Disconnecting wallet");
