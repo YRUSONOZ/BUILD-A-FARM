@@ -39,16 +39,13 @@ class CropFarmingGame {
         this.currentWeather = 0;
         this.weatherCheckInterval = 30;
         this.cropUpdateInterval = null;
-        
-        // Initialize systems
-        this.upgradeSystem = new UpgradeSystem(this);
+
+        // Initialize token balances
         this.tokenBalances = {
             harvest: 0,
             usdc: 0
         };
-
-        // Initialize plot system
-        this.plotSystem = new PlotSystem(this);
+        // Contract ABI
         this.contractABI = [
             {
                 "inputs": [],
@@ -97,25 +94,6 @@ class CropFarmingGame {
                 "anonymous": false,
                 "inputs": [
                     {
-                        "indexed": false,
-                        "internalType": "uint8",
-                        "name": "cropType",
-                        "type": "uint8"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "newPrice",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "MarketPriceUpdated",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
                         "indexed": true,
                         "internalType": "address",
                         "name": "previousOwner",
@@ -149,120 +127,6 @@ class CropFarmingGame {
                 ],
                 "name": "PlotPurchased",
                 "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "user",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "token",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "RewardClaimed",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "newRate",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "RewardRateUpdated",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "user",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "token",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "Staked",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "user",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "token",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "Unstaked",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": false,
-                        "internalType": "enum CryptoFarming.Weather",
-                        "name": "newWeather",
-                        "type": "uint8"
-                    }
-                ],
-                "name": "WeatherChanged",
-                "type": "event"
-            },
-            {
-                "inputs": [],
-                "name": "REWARD_RATE_PRECISION",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
             },
             {
                 "inputs": [],
@@ -326,25 +190,6 @@ class CropFarmingGame {
             {
                 "inputs": [
                     {
-                        "internalType": "uint8",
-                        "name": "_cropType",
-                        "type": "uint8"
-                    }
-                ],
-                "name": "getPlantingCost",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "pure",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
                         "internalType": "uint256",
                         "name": "yieldBoostMultiplier",
                         "type": "uint256"
@@ -401,13 +246,6 @@ class CropFarmingGame {
                 "type": "function"
             },
             {
-                "constant": true,
-                "inputs": [],
-                "name": "totalSupply",
-                "outputs": [{"name": "", "type": "uint256"}],
-                "type": "function"
-            },
-            {
                 "constant": false,
                 "inputs": [
                     {"name": "_to", "type": "address"},
@@ -416,82 +254,81 @@ class CropFarmingGame {
                 "name": "transfer",
                 "outputs": [{"name": "", "type": "bool"}],
                 "type": "function"
-            },
-            {
-                "constant": false,
-                "inputs": [
-                    {"name": "_from", "type": "address"},
-                    {"name": "_to", "type": "address"},
-                    {"name": "_value", "type": "uint256"}
-                ],
-                "name": "transferFrom",
-                "outputs": [{"name": "", "type": "bool"}],
-                "type": "function"
             }
         ];
+
+        // Initialize systems in the correct order
+        this.upgradeSystem = new UpgradeSystem(this);
         this.tokenActions = new TokenActions(this);
         this.farmActions = new FarmActions(this);
+        this.plotSystem = new PlotSystem(this);
 
+        // Initialize game features
         this.initializeMarketPrices();
         this.initializeUI();
         this.startMarketFluctuations();
         console.log("CropFarmingGame initialized");
     }
-
     async connectWallet() {
-    console.log("Attempting to connect wallet");
-    if (typeof window.ethereum !== 'undefined') {
-        try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            console.log("Accounts received:", accounts);
-            
-            this.web3 = new Web3(window.ethereum);
-            this.accounts = accounts;
-
-            const networkId = await this.web3.eth.net.getId();
-            console.log("Network ID:", networkId);
-            const sepoliaTestnetId = 11155111;
-            if (networkId !== sepoliaTestnetId) {
-                alert('Please connect to the Sepolia testnet in MetaMask');
-                return;
-            }
-
+        console.log("Attempting to connect wallet");
+        if (typeof window.ethereum !== 'undefined') {
             try {
-                this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
-                console.log("Contract initialized:", this.contract);
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                console.log("Accounts received:", accounts);
                 
-                // Update UI first
-                this.playerID = this.accounts[0];
-                this.updateWalletUI();
-                
-                // Initialize token contracts
-                await this.tokenActions.updateTokenBalances();
-                
-                // Update game state
-                await this.updateWeather();
-                await this.plotSystem.initializePlots();
-                this.plotSystem.startCropUpdates();
+                this.web3 = new Web3(window.ethereum);
+                this.accounts = accounts;
 
-                // Set up intervals
-                this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
-                this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
-                this.tokenBalanceInterval = setInterval(() => this.tokenActions.updateTokenBalances(), 30000);
-                
-                console.log("Wallet connected successfully");
-            } catch (contractError) {
-                console.error("Error initializing contract:", contractError);
-                alert("Failed to initialize contract. Please check if you're connected to the correct network and the contract address is correct.");
-                return;
+                const networkId = await this.web3.eth.net.getId();
+                console.log("Network ID:", networkId);
+                const sepoliaTestnetId = 11155111;
+                if (networkId !== sepoliaTestnetId) {
+                    alert('Please connect to the Sepolia testnet in MetaMask');
+                    return;
+                }
+
+                try {
+                    this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
+                    console.log("Contract initialized:", this.contract);
+                    
+                    // Update UI first
+                    this.playerID = this.accounts[0];
+                    this.updateWalletUI();
+                    
+                    // Update game state
+                    await this.updateWeather();
+                    await this.plotSystem.initializePlots();
+                    this.plotSystem.startCropUpdates();
+
+                    // Initialize token balances
+                    if (this.tokenActions && typeof this.tokenActions.updateTokenBalances === 'function') {
+                        await this.tokenActions.updateTokenBalances();
+                    }
+
+                    // Set up intervals
+                    this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
+                    this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
+                    this.tokenBalanceInterval = setInterval(() => {
+                        if (this.tokenActions && typeof this.tokenActions.updateTokenBalances === 'function') {
+                            this.tokenActions.updateTokenBalances();
+                        }
+                    }, 30000);
+                    
+                    console.log("Wallet connected successfully");
+                } catch (contractError) {
+                    console.error("Error initializing contract:", contractError);
+                    alert("Failed to initialize contract. Please check if you're connected to the correct network and the contract address is correct.");
+                    return;
+                }
+            } catch (error) {
+                console.error("Detailed wallet connection error:", error);
+                alert(`Failed to connect wallet: ${error.message}. Please check the console for more details and try again.`);
             }
-        } catch (error) {
-            console.error("Detailed wallet connection error:", error);
-            alert(`Failed to connect wallet: ${error.message}. Please check the console for more details and try again.`);
+        } else {
+            console.error("Ethereum wallet not found");
+            alert("Please install MetaMask to use this dApp!");
         }
-    } else {
-        console.error("Ethereum wallet not found");
-        alert("Please install MetaMask to use this dApp!");
     }
-}
 
     disconnectWallet() {
         console.log("Disconnecting wallet");
@@ -502,14 +339,20 @@ class CropFarmingGame {
         this.balance = 0;
         this.updateWalletUI();
         document.getElementById('disconnect-wallet-btn').style.display = 'none';
+        
+        // Clear all intervals
         clearInterval(this.farmStatusInterval);
         clearInterval(this.weatherInterval);
         clearInterval(this.tokenBalanceInterval);
         if (this.cropUpdateInterval) {
             clearInterval(this.cropUpdateInterval);
         }
+        
         // Reset plot system
-        this.plotSystem.resetPlots();
+        if (this.plotSystem) {
+            this.plotSystem.resetPlots();
+        }
+        
         console.log("Wallet disconnected");
         alert('Wallet disconnected successfully.');
     }
@@ -556,8 +399,6 @@ class CropFarmingGame {
                 <h3>Current Weather: ${this.weatherIcons[this.currentWeather]}</h3>
                 <p>Effect: ${this.weatherEffects[this.currentWeather]}</p>
             `;
-        } else {
-            console.error("Weather container not found");
         }
     }
 
@@ -573,8 +414,10 @@ class CropFarmingGame {
                 this.updateWalletUI();
                 
                 // Update plot system with new farm status
-                await this.plotSystem.updatePlots(farmStatus);
-                
+                if (this.plotSystem) {
+                    await this.plotSystem.updatePlots(farmStatus);
+                }
+
                 if (this.upgradeSystem) {
                     this.upgradeSystem.updateUpgradeUI('growthSpeed');
                     this.upgradeSystem.updateUpgradeUI('yieldBoost');
@@ -584,11 +427,8 @@ class CropFarmingGame {
             } catch (error) {
                 console.error("Failed to update farm status:", error);
             }
-        } else {
-            console.log("Wallet not connected, skipping farm status update");
         }
     }
-
     formatTime(seconds) {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
@@ -602,6 +442,7 @@ class CropFarmingGame {
         if (amountFloat < 0.0001) return "<0.0001";
         return amountFloat.toFixed(4);
     }
+
     initializeMarketPrices() {
         console.log("Initializing market prices");
         this.cropTypes.forEach(crop => {
@@ -651,32 +492,33 @@ class CropFarmingGame {
                     this.marketPrices[crop.name].currentPrice = parseInt(newPrice);
                     this.marketPrices[crop.name].trend = newPrice > this.marketPrices[crop.name].currentPrice ? 'up' : 'down';
                 } catch (error) {
-                    console.error(`Failed to update market price for ${crop.name}:`, error);
-                    // Use fallback price if contract call fails
-                    this.marketPrices[crop.name].currentPrice = crop.baseReward;
+                    console.log(`Using fallback price for ${crop.name}`);
+                    this.updateFallbackPrice(crop);
                 }
             }
         } else {
-            this.cropTypes.forEach(crop => {
-                const changePercent = Math.random() * 0.2;
-                const changeAmount = crop.baseReward * changePercent;
-                const market = this.marketPrices[crop.name];
-
-                if (market.trend === 'up') {
-                    market.currentPrice += changeAmount;
-                    if (Math.random() > 0.7) market.trend = 'down';
-                } else {
-                    market.currentPrice -= changeAmount;
-                    if (Math.random() > 0.7) market.trend = 'up';
-                }
-
-                market.currentPrice = Math.max(crop.baseReward * 0.5, Math.min(crop.baseReward * 1.5, market.currentPrice));
-                console.log(`Fallback market price for ${crop.name}:`, market.currentPrice);
-            });
+            this.cropTypes.forEach(crop => this.updateFallbackPrice(crop));
         }
 
         this.updateMarketUI();
         await this.updateCropTypes();
+    }
+
+    updateFallbackPrice(crop) {
+        const changePercent = Math.random() * 0.2;
+        const changeAmount = crop.baseReward * changePercent;
+        const market = this.marketPrices[crop.name];
+
+        if (market.trend === 'up') {
+            market.currentPrice += changeAmount;
+            if (Math.random() > 0.7) market.trend = 'down';
+        } else {
+            market.currentPrice -= changeAmount;
+            if (Math.random() > 0.7) market.trend = 'up';
+        }
+
+        market.currentPrice = Math.max(crop.baseReward * 0.5, Math.min(crop.baseReward * 1.5, market.currentPrice));
+        console.log(`Fallback market price for ${crop.name}:`, market.currentPrice);
     }
 
     updateMarketUI() {
@@ -749,54 +591,27 @@ class CropFarmingGame {
 
     initializeUI() {
         console.log("Initializing UI");
+        
+        // Connect wallet button
         const connectWalletBtn = document.getElementById('connect-wallet-btn');
         if (connectWalletBtn) {
             connectWalletBtn.addEventListener('click', () => this.connectWallet());
         }
         
+        // Disconnect wallet button
         const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
         if (disconnectWalletBtn) {
             disconnectWalletBtn.addEventListener('click', () => this.disconnectWallet());
         }
 
-        // Initialize plot-related buttons
-        const purchasePlotBtn = document.getElementById('purchase-plot-btn');
-        if (purchasePlotBtn) {
-            purchasePlotBtn.addEventListener('click', () => this.plotSystem.purchasePlot());
-        }
-
-        const plantBtn = document.getElementById('plant-btn');
-        if (plantBtn) {
-            plantBtn.addEventListener('click', () => {
-                const cropSelect = document.getElementById('crop-select');
-                if (cropSelect) {
-                    this.plotSystem.plantCrop(cropSelect.value);
+        // Initialize token select changes
+        const tokenSelect = document.getElementById('token-select');
+        if (tokenSelect) {
+            tokenSelect.addEventListener('change', () => {
+                if (this.tokenActions) {
+                    this.tokenActions.updateSelectedTokenBalance();
                 }
             });
-        }
-
-        const harvestBtn = document.getElementById('harvest-btn');
-        if (harvestBtn) {
-            harvestBtn.addEventListener('click', () => this.plotSystem.harvestAllPlots());
-        }
-
-        // Initialize staking controls
-        const stakeBtn = document.getElementById('stake-btn');
-        const unstakeBtn = document.getElementById('unstake-btn');
-        const tokenSelect = document.getElementById('token-select');
-        if (stakeBtn && unstakeBtn && tokenSelect) {
-            stakeBtn.addEventListener('click', () => {
-                const amount = document.getElementById('token-amount').value;
-                this.tokenActions.stakeTokens(tokenSelect.value, amount);
-            });
-            
-            unstakeBtn.addEventListener('click', () => {
-                const amount = document.getElementById('token-amount').value;
-                const tokenAddress = tokenSelect.value === 'usdc' ? this.usdcTokenAddress : this.harvestTokenAddress;
-                this.tokenActions.unstakeTokens(tokenAddress, this.web3.utils.toWei(amount, tokenSelect.value === 'usdc' ? 'mwei' : 'ether'));
-            });
-            
-            tokenSelect.addEventListener('change', () => this.tokenActions.updateSelectedTokenBalance());
         }
 
         this.updateCropTypes();
