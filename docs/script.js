@@ -1,234 +1,77 @@
-formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes}m ${remainingSeconds}s`;
-    }
+import UpgradeSystem from './upgrades.js';
+import { TokenActions } from './tokenActions.js';
+import { FarmActions } from './farmActions.js';
+import { PlotSystem } from './plots.js';
 
-    formatTokenAmount(amount) {
-        if (amount === "N/A") return amount;
-        const amountFloat = parseFloat(amount);
-        if (isNaN(amountFloat)) return "0.0000";
-        if (amountFloat < 0.0001) return "<0.0001";
-        return amountFloat.toFixed(4);
-    }
+class CropFarmingGame {
+    constructor() {
+        console.log("Initializing CropFarmingGame");
+        this.playerID = 'Not Connected';
+        this.harvestBalance = 0;
+        this.usdcBalance = 0;
+        this.crops = [];
+        this.cropIcons = {
+            'Bitcoin': '🪙',
+            'Ethereum': '💎',
+            'Dogecoin': '🐶'
+        };
+        this.cropTypes = [
+            { name: "Bitcoin", baseGrowthTime: 300, baseReward: 50, basePlantCost: 10 },
+            { name: "Ethereum", baseGrowthTime: 180, baseReward: 30, basePlantCost: 5 },
+            { name: "Dogecoin", baseGrowthTime: 60, baseReward: 10, basePlantCost: 1 },
+        ];
+        this.marketPrices = {};
+        this.contractAddress = '0x5A5959A318FbD06e536A91f37874f0920232439D';
+        this.harvestTokenAddress = '0x051565d89b0490d4d87378F3Fe5Ca95D5aD18067';
+        this.usdcTokenAddress = '0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8';
+        this.marketUpdateInterval = 300000;
+        this.marketCountdown = 300;
+        this.lastMarketUpdate = Date.now();
+        this.weatherIcons = {
+            0: '☀️', 1: '🌧️', 2: '🏜️', 3: '❄️'
+        };
+        this.weatherEffects = {
+            0: 'Growth speed +20%',
+            1: 'Yield +20%',
+            2: 'Growth speed -20%',
+            3: 'Yield -20%'
+        };
+        this.currentWeather = 0;
+        this.weatherCheckInterval = 30;
+        this.cropUpdateInterval = null;
 
-    initializeMarketPrices() {
-        console.log("Initializing market prices");
-        this.cropTypes.forEach(crop => {
-            this.marketPrices[crop.name] = {
-                currentPrice: crop.baseReward,
-                trend: Math.random() > 0.5 ? 'up' : 'down'
-            };
-        });
-        console.log("Market prices initialized:", this.marketPrices);
-    }
+        // Initialize token balances
+        this.tokenBalances = {
+            harvest: 0,
+            usdc: 0
+        };
 
-    startMarketFluctuations() {
-        console.log("Starting market fluctuations");
-        this.updateMarketPrices();
-        this.updateMarketCountdown();
-
-        setInterval(() => {
-            const now = Date.now();
-            const elapsedTime = now - this.lastMarketUpdate;
-
-            if (elapsedTime >= this.marketUpdateInterval) {
-                this.updateMarketPrices();
-                this.marketCountdown = 300;
-                this.lastMarketUpdate = now;
-            } else {
-                this.marketCountdown = Math.max(0, 300 - Math.floor(elapsedTime / 1000));
-            }
-
-            this.updateMarketCountdown();
-        }, 1000);
-    }
-
-    updateMarketCountdown() {
-        const countdownElement = document.getElementById('market-countdown');
-        if (countdownElement) {
-            countdownElement.textContent = `Next update in: ${this.marketCountdown}s`;
-        } else {
-            console.error("Market countdown element not found");
-        }
-    }
-
-    async updateMarketPrices() {
-        console.log("Updating market prices");
-        if (this.contract && this.accounts) {
-            for (const crop of this.cropTypes) {
-                try {
-                    const newPrice = await this.contract.methods.marketPrices(this.cropTypes.indexOf(crop)).call();
-                    console.log(`Market price for ${crop.name}:`, newPrice);
-                    this.marketPrices[crop.name].currentPrice = parseInt(newPrice);
-                    this.marketPrices[crop.name].trend = newPrice > this.marketPrices[crop.name].currentPrice ? 'up' : 'down';
-                } catch (error) {
-                    console.log(`Using fallback price for ${crop.name}`);
-                    this.updateFallbackPrice(crop);
-                }
-            }
-        } else {
-            this.cropTypes.forEach(crop => this.updateFallbackPrice(crop));
-        }
-
-        this.updateMarketUI();
-        await this.updateCropTypes();
-    }
-
-    updateFallbackPrice(crop) {
-        const changePercent = Math.random() * 0.2;
-        const changeAmount = crop.baseReward * changePercent;
-        const market = this.marketPrices[crop.name];
-
-        if (market.trend === 'up') {
-            market.currentPrice += changeAmount;
-            if (Math.random() > 0.7) market.trend = 'down';
-        } else {
-            market.currentPrice -= changeAmount;
-            if (Math.random() > 0.7) market.trend = 'up';
-        }
-
-        market.currentPrice = Math.max(crop.baseReward * 0.5, Math.min(crop.baseReward * 1.5, market.currentPrice));
-        console.log(`Fallback market price for ${crop.name}:`, market.currentPrice);
-    }
-
-    updateMarketUI() {
-        console.log("Updating market UI");
-        const marketContainer = document.getElementById('market-prices-scroll');
-        if (!marketContainer) {
-            console.error("Market prices container not found");
-            return;
-        }
-        marketContainer.innerHTML = '';
-        Object.entries(this.marketPrices).forEach(([cropName, market]) => {
-            const priceSpan = document.createElement('span');
-            const trend = market.trend === 'up' ? '📈' : '📉';
-            priceSpan.innerHTML = `${this.cropIcons[cropName]} ${cropName}: ${market.currentPrice.toFixed(2)} HARV ${trend}`;
-            marketContainer.appendChild(priceSpan);
-        });
-    }
-
-    async getEstimatedReward(cropType, baseReward) {
-        console.log(`Calculating estimated reward for ${cropType} with base reward ${baseReward}`);
-        const yieldBoostMultiplier = this.upgradeSystem ? this.upgradeSystem.getYieldBoostMultiplier() : 100;
-        console.log(`Yield Boost Multiplier: ${yieldBoostMultiplier}`);
+        console.log("Initializing systems...");
         
-        let marketPrice = this.marketPrices[cropType].currentPrice;
-        console.log(`Market Price for ${cropType}: ${marketPrice}`);
+        // Initialize systems in the correct order
+        try {
+            this.upgradeSystem = new UpgradeSystem(this);
+            console.log("UpgradeSystem initialized");
+            
+            this.tokenActions = new TokenActions(this);
+            console.log("TokenActions initialized:", this.tokenActions);
+            
+            this.farmActions = new FarmActions(this);
+            console.log("FarmActions initialized");
+            
+            this.plotSystem = new PlotSystem(this);
+            console.log("PlotSystem initialized");
+        } catch (error) {
+            console.error("Error during system initialization:", error);
+        }
 
-        let weather = this.currentWeather;
-        console.log(`Current Weather: ${weather}`);
-        
-        let weatherMultiplier = 100;
-        if (weather == 1) weatherMultiplier = 120; // Rainy
-        if (weather == 3) weatherMultiplier = 80;  // CryptoWinter
-        console.log(`Weather Multiplier: ${weatherMultiplier}`);
-
-        const scalingFactor = 1e15;
-        console.log(`Scaling Factor: ${scalingFactor}`);
-
-        const priceAdjustedReward = (baseReward * marketPrice) / scalingFactor;
-        console.log(`Price Adjusted Reward: ${priceAdjustedReward}`);
-
-        const estimatedReward = (priceAdjustedReward * weatherMultiplier * yieldBoostMultiplier) / 10000;
-        console.log(`Estimated Reward: ${estimatedReward}`);
-        
-        return estimatedReward.toString();
+        // Initialize game features
+        this.initializeMarketPrices();
+        this.initializeUI();
+        this.startMarketFluctuations();
+        console.log("CropFarmingGame initialization complete");
     }
-
-    async updateCropTypes() {
-        console.log("Updating crop types");
-        const cropSelect = document.getElementById('crop-select');
-        if (!cropSelect) {
-            console.error("Crop select element not found");
-            return;
-        }
-        cropSelect.innerHTML = '';
-        for (const crop of this.cropTypes) {
-            const option = document.createElement('option');
-            option.value = crop.name;
-            let estimatedReward;
-            try {
-                estimatedReward = await this.getEstimatedReward(crop.name, crop.baseReward);
-                console.log(`Estimated reward for ${crop.name}: ${estimatedReward}`);
-            } catch (error) {
-                console.error(`Error calculating estimated reward for ${crop.name}:`, error);
-                estimatedReward = "N/A";
-            }
-            option.textContent = `${crop.name} (Cost: ${crop.basePlantCost} HARV, Estimated: ${this.formatTokenAmount(estimatedReward)} HARV)`;
-            cropSelect.appendChild(option);
-        }
-    }
-
-    initializeUI() {
-        console.log("Initializing UI");
-        
-        // Initialize wallet buttons
-        const connectWalletBtn = document.getElementById('connect-wallet-btn');
-        const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
-
-        if (connectWalletBtn) {
-            connectWalletBtn.addEventListener('click', () => this.connectWallet());
-            console.log("Connect wallet button initialized");
-        }
-        
-        if (disconnectWalletBtn) {
-            disconnectWalletBtn.addEventListener('click', () => this.disconnectWallet());
-            console.log("Disconnect wallet button initialized");
-        }
-
-        // Initialize token select
-        const tokenSelect = document.getElementById('token-select');
-        if (tokenSelect) {
-            tokenSelect.addEventListener('change', () => {
-                if (this.tokenActions) {
-                    this.tokenActions.updateSelectedTokenBalance();
-                    console.log("Token selection changed");
-                }
-            });
-        }
-
-        this.updateCropTypes();
-        this.updateMarketUI();
-        this.updateWeatherUI();
-
-        console.log("UI initialization complete");
-    }
-}
-
-// Initialize the game
-console.log("Starting game initialization");
-const game = new CropFarmingGame();
-
-// Start market fluctuations
-game.startMarketFluctuations();
-
-// Add event listener for DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM fully loaded and parsed');
-    const connectWalletBtn = document.getElementById('connect-wallet-btn');
-    if (connectWalletBtn) {
-        connectWalletBtn.addEventListener('click', () => {
-            console.log('Connect wallet button clicked');
-            if (typeof window.ethereum !== 'undefined') {
-                console.log('MetaMask is installed!');
-                game.connectWallet();
-            } else {
-                console.log('MetaMask is not installed');
-                alert('Please install MetaMask to use this dApp!');
-            }
-        });
-    } else {
-        console.error('Connect wallet button not found in DOM');
-    }
-
-    // Initialize UI elements that depend on the DOM being loaded
-    game.initializeUI();
-});
-
-// Export the game instance
-export default game;
-// Contract ABI
+        // Contract ABI
         this.contractABI = [
             {
                 "inputs": [],
@@ -440,7 +283,7 @@ export default game;
                 "type": "function"
             }
         ];
-async connectWallet() {
+        async connectWallet() {
         console.log("Attempting to connect wallet");
         if (typeof window.ethereum !== 'undefined') {
             try {
@@ -641,7 +484,7 @@ async connectWallet() {
             console.log("Wallet not connected, skipping farm status update");
         }
     }
-formatTime(seconds) {
+        formatTime(seconds) {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         return `${minutes}m ${remainingSeconds}s`;
