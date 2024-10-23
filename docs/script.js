@@ -45,7 +45,33 @@ class CropFarmingGame {
             harvest: 0,
             usdc: 0
         };
-        // Contract ABI
+
+        console.log("Initializing systems...");
+        
+        // Initialize systems in the correct order
+        try {
+            this.upgradeSystem = new UpgradeSystem(this);
+            console.log("UpgradeSystem initialized");
+            
+            this.tokenActions = new TokenActions(this);
+            console.log("TokenActions initialized:", this.tokenActions);
+            
+            this.farmActions = new FarmActions(this);
+            console.log("FarmActions initialized");
+            
+            this.plotSystem = new PlotSystem(this);
+            console.log("PlotSystem initialized");
+        } catch (error) {
+            console.error("Error during system initialization:", error);
+        }
+
+        // Initialize game features
+        this.initializeMarketPrices();
+        this.initializeUI();
+        this.startMarketFluctuations();
+        console.log("CropFarmingGame initialization complete");
+    }
+    // Contract ABI
         this.contractABI = [
             {
                 "inputs": [],
@@ -227,6 +253,7 @@ class CropFarmingGame {
             }
         ];
 
+        // ERC20 ABI
         this.erc20ABI = [
             {
                 "constant": true,
@@ -256,19 +283,6 @@ class CropFarmingGame {
                 "type": "function"
             }
         ];
-
-        // Initialize systems in the correct order
-        this.upgradeSystem = new UpgradeSystem(this);
-        this.tokenActions = new TokenActions(this);
-        this.farmActions = new FarmActions(this);
-        this.plotSystem = new PlotSystem(this);
-
-        // Initialize game features
-        this.initializeMarketPrices();
-        this.initializeUI();
-        this.startMarketFluctuations();
-        console.log("CropFarmingGame initialized");
-    }
     async connectWallet() {
         console.log("Attempting to connect wallet");
         if (typeof window.ethereum !== 'undefined') {
@@ -300,19 +314,28 @@ class CropFarmingGame {
                     await this.plotSystem.initializePlots();
                     this.plotSystem.startCropUpdates();
 
-                    // Initialize token balances
-                    if (this.tokenActions && typeof this.tokenActions.updateTokenBalances === 'function') {
-                        await this.tokenActions.updateTokenBalances();
+                    // Check if tokenActions is properly initialized
+                    console.log("Checking TokenActions:", this.tokenActions);
+                    if (!this.tokenActions) {
+                        console.log("TokenActions not found, reinitializing...");
+                        this.tokenActions = new TokenActions(this);
                     }
 
-                    // Set up intervals
-                    this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
-                    this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
-                    this.tokenBalanceInterval = setInterval(() => {
+                    // Initialize token balances with additional error checking
+                    try {
+                        console.log("Attempting to update token balances...");
                         if (this.tokenActions && typeof this.tokenActions.updateTokenBalances === 'function') {
-                            this.tokenActions.updateTokenBalances();
+                            await this.tokenActions.updateTokenBalances();
+                            console.log("Token balances updated successfully");
+                        } else {
+                            console.error("updateTokenBalances is not available:", this.tokenActions);
                         }
-                    }, 30000);
+                    } catch (tokenError) {
+                        console.error("Error updating token balances:", tokenError);
+                    }
+
+                    // Set up intervals with error checking
+                    this.setupIntervals();
                     
                     console.log("Wallet connected successfully");
                 } catch (contractError) {
@@ -330,6 +353,27 @@ class CropFarmingGame {
         }
     }
 
+    setupIntervals() {
+        console.log("Setting up intervals...");
+        try {
+            this.farmStatusInterval = setInterval(() => this.updateFarmStatus(), 30000);
+            this.weatherInterval = setInterval(() => this.updateWeather(), this.weatherCheckInterval * 1000);
+            
+            if (this.tokenActions && typeof this.tokenActions.updateTokenBalances === 'function') {
+                this.tokenBalanceInterval = setInterval(() => {
+                    try {
+                        this.tokenActions.updateTokenBalances();
+                    } catch (error) {
+                        console.error("Error in token balance interval:", error);
+                    }
+                }, 30000);
+            }
+            console.log("Intervals set up successfully");
+        } catch (error) {
+            console.error("Error setting up intervals:", error);
+        }
+    }
+
     disconnectWallet() {
         console.log("Disconnecting wallet");
         this.web3 = null;
@@ -341,12 +385,10 @@ class CropFarmingGame {
         document.getElementById('disconnect-wallet-btn').style.display = 'none';
         
         // Clear all intervals
-        clearInterval(this.farmStatusInterval);
-        clearInterval(this.weatherInterval);
-        clearInterval(this.tokenBalanceInterval);
-        if (this.cropUpdateInterval) {
-            clearInterval(this.cropUpdateInterval);
-        }
+        if (this.farmStatusInterval) clearInterval(this.farmStatusInterval);
+        if (this.weatherInterval) clearInterval(this.weatherInterval);
+        if (this.tokenBalanceInterval) clearInterval(this.tokenBalanceInterval);
+        if (this.cropUpdateInterval) clearInterval(this.cropUpdateInterval);
         
         // Reset plot system
         if (this.plotSystem) {
@@ -362,6 +404,12 @@ class CropFarmingGame {
         const playerIdSpan = document.getElementById('player-id');
         const playerBalanceSpan = document.getElementById('player-balance');
         const playerInfo = document.getElementById('player-info');
+        
+        if (!playerIdSpan || !playerBalanceSpan || !playerInfo) {
+            console.error("Required UI elements not found");
+            return;
+        }
+
         if (this.accounts && this.accounts[0]) {
             playerIdSpan.innerHTML = `<i class="fas fa-user"></i> ${this.playerID.substring(0, 6)}...${this.playerID.substring(38)}`;
             playerBalanceSpan.innerHTML = `<i class="fas fa-coins"></i> ${this.balance} HARV`;
@@ -372,7 +420,10 @@ class CropFarmingGame {
             playerBalanceSpan.innerHTML = `<i class="fas fa-coins"></i> 0 HARV`;
             playerInfo.classList.remove('connected');
             document.getElementById('disconnect-wallet-btn').style.display = 'none';
-            document.getElementById('connect-wallet-btn').addEventListener('click', () => this.connectWallet());
+            const connectBtn = document.getElementById('connect-wallet-btn');
+            if (connectBtn) {
+                connectBtn.addEventListener('click', () => this.connectWallet());
+            }
         }
     }
 
@@ -399,6 +450,8 @@ class CropFarmingGame {
                 <h3>Current Weather: ${this.weatherIcons[this.currentWeather]}</h3>
                 <p>Effect: ${this.weatherEffects[this.currentWeather]}</p>
             `;
+        } else {
+            console.error("Weather container not found");
         }
     }
 
@@ -423,10 +476,12 @@ class CropFarmingGame {
                     this.upgradeSystem.updateUpgradeUI('yieldBoost');
                 }
 
-                console.log("Farm status updated");
+                console.log("Farm status updated successfully");
             } catch (error) {
                 console.error("Failed to update farm status:", error);
             }
+        } else {
+            console.log("Wallet not connected, skipping farm status update");
         }
     }
     formatTime(seconds) {
@@ -479,6 +534,8 @@ class CropFarmingGame {
         const countdownElement = document.getElementById('market-countdown');
         if (countdownElement) {
             countdownElement.textContent = `Next update in: ${this.marketCountdown}s`;
+        } else {
+            console.error("Market countdown element not found");
         }
     }
 
@@ -539,7 +596,7 @@ class CropFarmingGame {
 
     async getEstimatedReward(cropType, baseReward) {
         console.log(`Calculating estimated reward for ${cropType} with base reward ${baseReward}`);
-        const yieldBoostMultiplier = this.upgradeSystem.getYieldBoostMultiplier();
+        const yieldBoostMultiplier = this.upgradeSystem ? this.upgradeSystem.getYieldBoostMultiplier() : 100;
         console.log(`Yield Boost Multiplier: ${yieldBoostMultiplier}`);
         
         let marketPrice = this.marketPrices[cropType].currentPrice;
@@ -592,24 +649,27 @@ class CropFarmingGame {
     initializeUI() {
         console.log("Initializing UI");
         
-        // Connect wallet button
+        // Initialize wallet buttons
         const connectWalletBtn = document.getElementById('connect-wallet-btn');
+        const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
+
         if (connectWalletBtn) {
             connectWalletBtn.addEventListener('click', () => this.connectWallet());
+            console.log("Connect wallet button initialized");
         }
         
-        // Disconnect wallet button
-        const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
         if (disconnectWalletBtn) {
             disconnectWalletBtn.addEventListener('click', () => this.disconnectWallet());
+            console.log("Disconnect wallet button initialized");
         }
 
-        // Initialize token select changes
+        // Initialize token select
         const tokenSelect = document.getElementById('token-select');
         if (tokenSelect) {
             tokenSelect.addEventListener('change', () => {
                 if (this.tokenActions) {
                     this.tokenActions.updateSelectedTokenBalance();
+                    console.log("Token selection changed");
                 }
             });
         }
@@ -618,14 +678,13 @@ class CropFarmingGame {
         this.updateMarketUI();
         this.updateWeatherUI();
 
-        console.log("UI initialized");
+        console.log("UI initialization complete");
     }
 }
 
 // Initialize the game
 console.log("Starting game initialization");
 const game = new CropFarmingGame();
-console.log("Game initialized");
 
 // Start market fluctuations
 game.startMarketFluctuations();
@@ -645,6 +704,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Please install MetaMask to use this dApp!');
             }
         });
+    } else {
+        console.error('Connect wallet button not found in DOM');
     }
 
     // Initialize UI elements that depend on the DOM being loaded
