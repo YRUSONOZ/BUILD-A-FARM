@@ -46,7 +46,16 @@ export class TokenActions {
 
         balanceElement.textContent = this.game.formatTokenAmount(this.game.tokenBalances[selectedToken]);
 
-        if (this.game.contract && this.game.accounts) {
+        // Set default values for staking info
+        if (stakedBalanceElement) {
+            stakedBalanceElement.textContent = '0';
+        }
+        if (apyElement) {
+            apyElement.textContent = 'N/A';
+        }
+
+        // Only try to get staking info if contract is available and has the stakes method
+        if (this.game.contract && this.game.accounts && this.game.contract.methods.stakes) {
             const tokenAddress = selectedToken === 'usdc' ? this.game.usdcTokenAddress : this.game.harvestTokenAddress;
             this.game.contract.methods.stakes(this.game.accounts[0], tokenAddress).call()
                 .then(stake => {
@@ -54,7 +63,7 @@ export class TokenActions {
                     if (stakedBalanceElement) {
                         stakedBalanceElement.textContent = this.game.formatTokenAmount(stakedAmount);
                     }
-                    return this.game.getStakingAPY(tokenAddress);
+                    return this.getStakingAPY(tokenAddress);
                 })
                 .then(apy => {
                     if (apyElement) {
@@ -62,17 +71,17 @@ export class TokenActions {
                     }
                 })
                 .catch(error => {
-                    console.error("Error updating staked balance and APY:", error);
+                    console.log("Staking info not available:", error);
                 });
         }
     }
 
     async stakeTokens(tokenType, amount) {
-        console.log(`Attempting to stake ${tokenType} tokens`);
         if (!this.game.contract || !this.game.accounts) {
             alert("Please connect your wallet first!");
             return;
         }
+
         try {
             const tokenAddress = tokenType === 'usdc' ? this.game.usdcTokenAddress : this.game.harvestTokenAddress;
             const decimals = tokenType === 'usdc' ? 6 : 18;
@@ -80,25 +89,21 @@ export class TokenActions {
             const tokenContract = new this.game.web3.eth.Contract(this.game.erc20ABI, tokenAddress);
             
             console.log("Approving token transfer...");
-            const approvalResult = await tokenContract.methods.approve(this.game.contractAddress, amountInSmallestUnit).send({ from: this.game.accounts[0] });
-            console.log("Approval result:", approvalResult);
+            const approvalResult = await tokenContract.methods.approve(this.game.contractAddress, amountInSmallestUnit).send({ 
+                from: this.game.accounts[0] 
+            });
 
             if (approvalResult.status) {
                 console.log("Approval successful, now staking...");
-                const result = await this.game.contract.methods.stake(tokenAddress, amountInSmallestUnit).send({ from: this.game.accounts[0] });
+                const result = await this.game.contract.methods.stake(tokenAddress, amountInSmallestUnit).send({ 
+                    from: this.game.accounts[0] 
+                });
                 
                 if (result.status) {
                     console.log(`${amount} ${tokenType.toUpperCase()} tokens staked successfully!`);
-                    alert(`${amount} ${tokenType.toUpperCase()} tokens staked successfully! Transaction hash: ${result.transactionHash}`);
-                    await this.game.updateFarmStatus();
+                    alert(`${amount} ${tokenType.toUpperCase()} tokens staked successfully!`);
                     await this.updateTokenBalances();
-                } else {
-                    console.error(`Failed to stake ${tokenType.toUpperCase()} tokens`);
-                    alert(`Failed to stake ${tokenType.toUpperCase()} tokens. Please try again.`);
                 }
-            } else {
-                console.error("Failed to approve token transfer");
-                alert("Failed to approve token transfer. Please try again.");
             }
         } catch (error) {
             console.error(`Error staking ${tokenType.toUpperCase()} tokens:`, error);
@@ -107,24 +112,20 @@ export class TokenActions {
     }
 
     async unstakeTokens(tokenAddress, amount) {
-        console.log(`Attempting to unstake tokens from address ${tokenAddress}`);
         if (!this.game.contract || !this.game.accounts) {
             alert("Please connect your wallet first!");
             return;
         }
+
         try {
-            const result = await this.game.contract.methods.unstake(tokenAddress, amount).send({ from: this.game.accounts[0] });
+            const result = await this.game.contract.methods.unstake(tokenAddress, amount).send({ 
+                from: this.game.accounts[0] 
+            });
             
             if (result.status) {
-                const tokenType = tokenAddress === this.game.usdcTokenAddress ? 'USDC' : 'Harvest Token';
-                const unstakedAmount = this.game.web3.utils.fromWei(amount, tokenType === 'USDC' ? 'mwei' : 'ether');
-                console.log(`${unstakedAmount} ${tokenType} unstaked successfully!`);
-                alert(`${unstakedAmount} ${tokenType} unstaked successfully! Transaction hash: ${result.transactionHash}`);
-                await this.game.updateFarmStatus();
+                console.log("Tokens unstaked successfully!");
+                alert("Tokens unstaked successfully!");
                 await this.updateTokenBalances();
-            } else {
-                console.error("Failed to unstake tokens");
-                alert("Failed to unstake tokens. Please try again.");
             }
         } catch (error) {
             console.error("Error unstaking tokens:", error);
@@ -132,27 +133,19 @@ export class TokenActions {
         }
     }
 
-    async claimRewards(tokenAddress) {
-        console.log(`Attempting to claim rewards for token address ${tokenAddress}`);
-        if (!this.game.contract || !this.game.accounts) {
-            alert("Please connect your wallet first!");
-            return;
-        }
+    async getStakingAPY(tokenAddress) {
+        if (!this.game.contract || !this.game.accounts) return "N/A";
         try {
-            const result = await this.game.contract.methods.claimRewards(tokenAddress).send({ from: this.game.accounts[0] });
-            
-            if (result.status) {
-                console.log("Rewards claimed successfully!");
-                alert("Rewards claimed successfully!");
-                await this.game.updateFarmStatus();
-                await this.updateTokenBalances();
-            } else {
-                console.error("Failed to claim rewards");
-                alert("Failed to claim rewards. Please try again.");
+            // If contract has rewardRate method, use it
+            if (this.game.contract.methods.rewardRate) {
+                const rewardRate = await this.game.contract.methods.rewardRate().call();
+                const apy = (Number(rewardRate) * 365 * 100) / 10000; // Assuming rewardRate is daily and uses REWARD_RATE_PRECISION
+                return apy.toFixed(2);
             }
+            return "N/A";
         } catch (error) {
-            console.error("Error claiming rewards:", error);
-            alert(`Failed to claim rewards: ${error.message}`);
+            console.log("Error fetching staking APY:", error);
+            return "N/A";
         }
     }
 }
